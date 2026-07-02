@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../shared/widgets/navigation/qsdms_sidebar.dart';
 import '../../shared/widgets/navigation/sidebar_models.dart';
@@ -7,8 +8,9 @@ import 'app_layout_mode.dart';
 
 /// 应用主框架。
 ///
-/// `AppShell` 只负责组合侧边栏和内容区，不承载业务页面逻辑。侧边栏的
-/// 展开 / 折叠由统一断点决定，内容区始终通过 `Expanded` 获取剩余空间。
+/// `AppShell` 负责组合侧边栏和内容区，并在未传入外部菜单回调时执行默认
+/// GetX 路由切换。侧边栏的展开 / 折叠由统一断点决定，内容区始终通过
+/// `Expanded` 获取剩余空间。
 class AppShell extends StatelessWidget {
   const AppShell({
     required this.child,
@@ -24,6 +26,15 @@ class AppShell extends StatelessWidget {
   final ValueChanged<SidebarMenuItemConfig>? onMenuSelected;
   final VoidCallback? onLogoutRequested;
   final ValueChanged<SidebarNoticeConfig>? onNoticeTap;
+
+  void _handleMenuSelected(SidebarMenuItemConfig item) {
+    if (onMenuSelected != null) {
+      onMenuSelected!(item);
+      return;
+    }
+
+    Get.offNamed(item.routeName);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +53,7 @@ class AppShell extends StatelessWidget {
               displayMode: sidebarMode,
               user: QsdmsSidebarDefaults.user,
               notice: QsdmsSidebarDefaults.notice,
-              onMenuSelected: onMenuSelected,
+              onMenuSelected: _handleMenuSelected,
               onLogoutRequested: onLogoutRequested,
               onNoticeTap: onNoticeTap,
             ),

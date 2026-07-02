@@ -8,19 +8,41 @@ import 'package:qsdms_desktop_frontend/app/qsdms_app.dart';
 import 'package:qsdms_desktop_frontend/modules/home/home_controller.dart';
 
 void main() {
-  testWidgets('首页路由保持可访问但不显示原有内容', (tester) async {
+  testWidgets('首页路由展示工作台页面标记', (tester) async {
     await tester.pumpWidget(const QsdmsApp());
 
     expect(find.byType(GetMaterialApp), findsOneWidget);
     expect(find.byType(Scaffold), findsOneWidget);
+    expect(find.text('当前页面：工作台'), findsOneWidget);
+    expect(find.text('这里是工作台页面'), findsOneWidget);
+  });
 
-    // 首页当前按需求清空，只保留路由和页面骨架，避免旧工作台内容继续露出。
-    expect(find.text('QSDMS 企业数据管理系统'), findsNothing);
-    expect(find.text('订单处理工作台'), findsNothing);
-    expect(find.text('订单管理'), findsNothing);
-    expect(find.text('供应商管理'), findsNothing);
-    expect(find.text('产品资料'), findsNothing);
-    expect(find.text('仓储发运'), findsNothing);
+  testWidgets('侧边栏菜单点击后切换到对应页面', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1440, 900);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(const QsdmsApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('基础数据'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('当前页面：基础数据'), findsOneWidget);
+    expect(find.text('这里是基础数据页面'), findsOneWidget);
+
+    await tester.tap(find.text('系统设置'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('当前页面：系统设置'), findsOneWidget);
+    expect(find.text('这里是系统设置页面'), findsOneWidget);
+
+    await tester.tap(find.text('工作台'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('当前页面：工作台'), findsOneWidget);
+    expect(find.text('这里是工作台页面'), findsOneWidget);
   });
 
   testWidgets('首页依赖仍由 GetX 路由绑定注册', (tester) async {

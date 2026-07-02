@@ -96,16 +96,12 @@ abstract final class QsdmsSidebarDefaults {
       label: '基础数据',
       routeName: '/base-data',
       icon: Icons.dataset_outlined,
-      enabled: false,
-      disabledReason: '功能建设中',
     ),
     SidebarMenuItemConfig(
       id: 'settings',
       label: '系统设置',
       routeName: '/settings',
       icon: Icons.settings_outlined,
-      enabled: false,
-      disabledReason: '功能建设中',
     ),
   ];
 
