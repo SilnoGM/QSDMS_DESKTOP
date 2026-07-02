@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qsdms_desktop_frontend/app/layout/app_shell.dart';
 import 'package:qsdms_desktop_frontend/app/theme/app_colors.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/qsdms_sidebar.dart';
+import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_menu_item.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_models.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/window/app_window_title_bar.dart';
 
@@ -128,17 +129,69 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final dashboardItem = tester.widget<AnimatedContainer>(
-      find.byKey(const ValueKey('sidebar-menu-dashboard')),
+    final activeIndicator = tester.widget<AnimatedPositioned>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator')),
     );
-    final decoration = dashboardItem.decoration! as BoxDecoration;
+    final activeIndicatorBox = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-box')),
+    );
+    final decoration = activeIndicatorBox.decoration as BoxDecoration;
 
+    expect(activeIndicator.duration, const Duration(milliseconds: 180));
+    expect(activeIndicator.curve, Curves.easeOutCubic);
+    expect(
+      activeIndicator.top,
+      QsdmsSidebar.menuVerticalPadding + SidebarMenuItem.verticalPadding,
+    );
+    expect(activeIndicator.height, SidebarMenuItem.height);
     expect(decoration.color, AppColors.brandSelectedBackground);
 
     await tester.tap(find.text('工作台'));
     await tester.pumpAndSettle();
 
     expect(selectedCount, 0);
+  });
+
+  testWidgets('菜单切换时选中背景移动到新的菜单位置', (tester) async {
+    Widget buildSidebar(String activeItemId) {
+      return MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: QsdmsSidebarDefaults.menuItems,
+            activeItemId: activeItemId,
+            displayMode: SidebarDisplayMode.expanded,
+            user: QsdmsSidebarDefaults.user,
+            notice: QsdmsSidebarDefaults.notice,
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildSidebar('dashboard'));
+    await tester.pumpAndSettle();
+
+    final initialIndicator = tester.widget<AnimatedPositioned>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator')),
+    );
+
+    expect(
+      initialIndicator.top,
+      QsdmsSidebar.menuVerticalPadding + SidebarMenuItem.verticalPadding,
+    );
+
+    await tester.pumpWidget(buildSidebar('settings'));
+    await tester.pump();
+
+    final movedIndicator = tester.widget<AnimatedPositioned>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator')),
+    );
+
+    expect(
+      movedIndicator.top,
+      QsdmsSidebar.menuVerticalPadding +
+          SidebarMenuItem.verticalPadding +
+          SidebarMenuItem.outerHeight * 2,
+    );
   });
 
   testWidgets('菜单项和用户信息区使用点击鼠标指针', (tester) async {

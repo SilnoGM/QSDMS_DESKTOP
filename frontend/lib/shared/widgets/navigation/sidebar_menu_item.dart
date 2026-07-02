@@ -18,6 +18,18 @@ class SidebarMenuItem extends StatelessWidget {
   final SidebarDisplayMode displayMode;
   final ValueChanged<SidebarMenuItemConfig>? onSelected;
 
+  /// 菜单项主体高度。
+  static const height = 46.0;
+
+  /// 菜单项垂直外边距。
+  static const verticalPadding = 3.0;
+
+  /// 菜单项水平外边距。
+  static const horizontalPadding = 12.0;
+
+  /// 菜单项占用的完整垂直空间。
+  static const outerHeight = height + verticalPadding * 2;
+
   bool get _isExpanded => displayMode == SidebarDisplayMode.expanded;
 
   @override
@@ -78,13 +90,11 @@ class _SidebarMenuItemContent extends StatelessWidget {
     final content = AnimatedContainer(
       key: ValueKey('sidebar-menu-${item.id}'),
       duration: const Duration(milliseconds: 140),
-      height: 46,
+      height: SidebarMenuItem.height,
       alignment: Alignment.center,
       padding: EdgeInsets.symmetric(horizontal: showExpandedContent ? 12 : 0),
       decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.brandSelectedBackground
-            : AppColors.transparent,
+        color: AppColors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: showExpandedContent
@@ -142,7 +152,10 @@ class _SidebarMenuItemContent extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SidebarMenuItem.horizontalPadding,
+        vertical: SidebarMenuItem.verticalPadding,
+      ),
       child: showTooltip
           ? Tooltip(message: tooltipMessage, child: semanticItem)
           : semanticItem,

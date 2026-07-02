@@ -23,6 +23,7 @@ class QsdmsSidebar extends StatelessWidget {
 
   static const expandedWidth = 240.0;
   static const collapsedWidth = 72.0;
+  static const menuVerticalPadding = 8.0;
 
   final List<SidebarMenuItemConfig> items;
   final String activeItemId;
@@ -54,8 +55,84 @@ class QsdmsSidebar extends StatelessWidget {
           children: [
             SidebarBrand(displayMode: displayMode),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+              child: _SidebarMenuList(
+                items: items,
+                activeItemId: activeItemId,
+                displayMode: displayMode,
+                onMenuSelected: onMenuSelected,
+              ),
+            ),
+            if (_isExpanded && notice != null)
+              SidebarNoticeCard(notice: notice!, onNoticeTap: onNoticeTap),
+            SidebarUserProfile(
+              user: user,
+              displayMode: displayMode,
+              onLogoutRequested: onLogoutRequested,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarMenuList extends StatelessWidget {
+  const _SidebarMenuList({
+    required this.items,
+    required this.activeItemId,
+    required this.displayMode,
+    this.onMenuSelected,
+  });
+
+  final List<SidebarMenuItemConfig> items;
+  final String activeItemId;
+  final SidebarDisplayMode displayMode;
+  final ValueChanged<SidebarMenuItemConfig>? onMenuSelected;
+
+  int get _activeIndex => items.indexWhere((item) => item.id == activeItemId);
+
+  double get _menuHeight {
+    return QsdmsSidebar.menuVerticalPadding * 2 +
+        SidebarMenuItem.outerHeight * items.length;
+  }
+
+  double _indicatorTop(int activeIndex) {
+    return QsdmsSidebar.menuVerticalPadding +
+        SidebarMenuItem.verticalPadding +
+        SidebarMenuItem.outerHeight * activeIndex;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeIndex = _activeIndex;
+
+    return SingleChildScrollView(
+      child: SizedBox(
+        height: _menuHeight,
+        child: Stack(
+          children: [
+            if (activeIndex >= 0)
+              AnimatedPositioned(
+                key: const ValueKey('sidebar-active-menu-indicator'),
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                top: _indicatorTop(activeIndex),
+                left: SidebarMenuItem.horizontalPadding,
+                right: SidebarMenuItem.horizontalPadding,
+                height: SidebarMenuItem.height,
+                child: DecoratedBox(
+                  key: const ValueKey('sidebar-active-menu-indicator-box'),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandSelectedBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: QsdmsSidebar.menuVerticalPadding,
+              ),
+              child: Column(
                 children: [
                   for (final item in items)
                     SidebarMenuItem(
@@ -66,13 +143,6 @@ class QsdmsSidebar extends StatelessWidget {
                     ),
                 ],
               ),
-            ),
-            if (_isExpanded && notice != null)
-              SidebarNoticeCard(notice: notice!, onNoticeTap: onNoticeTap),
-            SidebarUserProfile(
-              user: user,
-              displayMode: displayMode,
-              onLogoutRequested: onLogoutRequested,
             ),
           ],
         ),
