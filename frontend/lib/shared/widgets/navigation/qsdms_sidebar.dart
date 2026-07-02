@@ -114,8 +114,8 @@ class _SidebarMenuList extends StatelessWidget {
             if (activeIndex >= 0)
               AnimatedPositioned(
                 key: const ValueKey('sidebar-active-menu-indicator'),
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutBack,
                 top: _indicatorTop(activeIndex),
                 left: SidebarMenuItem.horizontalPadding,
                 right: SidebarMenuItem.horizontalPadding,

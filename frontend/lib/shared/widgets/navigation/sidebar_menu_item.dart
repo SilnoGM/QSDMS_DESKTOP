@@ -138,7 +138,13 @@ class _SidebarMenuItemContent extends StatelessWidget {
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
       onTap: isEnabled && !isActive ? () => onSelected?.call(item) : null,
-      child: content,
+      child: AnimatedScale(
+        key: ValueKey('sidebar-menu-scale-${item.id}'),
+        scale: isActive ? 1.02 : 1.0,
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        child: content,
+      ),
     );
 
     final semanticItem = Semantics(

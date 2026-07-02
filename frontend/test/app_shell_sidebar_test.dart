@@ -137,14 +137,25 @@ void main() {
     );
     final decoration = activeIndicatorBox.decoration as BoxDecoration;
 
-    expect(activeIndicator.duration, const Duration(milliseconds: 180));
-    expect(activeIndicator.curve, Curves.easeOutCubic);
+    expect(activeIndicator.duration, const Duration(milliseconds: 260));
+    expect(activeIndicator.curve, Curves.easeOutBack);
     expect(
       activeIndicator.top,
       QsdmsSidebar.menuVerticalPadding + SidebarMenuItem.verticalPadding,
     );
     expect(activeIndicator.height, SidebarMenuItem.height);
     expect(decoration.color, AppColors.brandSelectedBackground);
+    final activeScale = tester.widget<AnimatedScale>(
+      find.byKey(const ValueKey('sidebar-menu-scale-dashboard')),
+    );
+    final inactiveScale = tester.widget<AnimatedScale>(
+      find.byKey(const ValueKey('sidebar-menu-scale-baseData')),
+    );
+
+    expect(activeScale.scale, 1.02);
+    expect(activeScale.duration, const Duration(milliseconds: 160));
+    expect(activeScale.curve, Curves.easeOutCubic);
+    expect(inactiveScale.scale, 1.0);
 
     await tester.tap(find.text('工作台'));
     await tester.pumpAndSettle();
