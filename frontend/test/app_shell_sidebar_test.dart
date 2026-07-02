@@ -278,7 +278,7 @@ void main() {
     expect(sidebarSource, contains('damping: 32'));
     expect(menuItemSource, contains('end: showExpandedContent ? 2 : 0'));
     expect(menuItemSource, contains('end: 1.018'));
-    expect(menuItemSource, contains('duration: 260.ms'));
+    expect(menuItemSource, contains('duration: 500.ms'));
     expect(menuItemSource, contains('curve: Curves.easeOutCubic'));
     expect(menuItemSource, isNot(contains('Curves.easeOutBack')));
   });

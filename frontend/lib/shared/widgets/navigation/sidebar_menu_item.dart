@@ -145,13 +145,13 @@ class _SidebarMenuItemContent extends StatelessWidget {
         .moveX(
           begin: 0,
           end: showExpandedContent ? 2 : 0,
-          duration: 260.ms,
+          duration: 500.ms,
           curve: Curves.easeOutCubic,
         )
         .scaleXY(
           begin: 1,
           end: 1.018,
-          duration: 260.ms,
+          duration: 500.ms,
           curve: Curves.easeOutCubic,
         );
 
