@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
 import 'sidebar_models.dart';
 
 /// 侧边栏顶部品牌区。
@@ -17,13 +18,13 @@ class SidebarBrand extends StatelessWidget {
       height: 32,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: const Color(0xFF1F6FEB),
+        color: AppColors.brand,
         borderRadius: BorderRadius.circular(8),
       ),
       child: const Text(
         'Q',
         style: TextStyle(
-          color: Colors.white,
+          color: AppColors.white,
           fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
@@ -52,7 +53,7 @@ class SidebarBrand extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Color(0xFF101828),
+                    color: AppColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),

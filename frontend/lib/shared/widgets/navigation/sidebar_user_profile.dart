@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
 import 'sidebar_models.dart';
 
 /// 侧边栏底部用户入口。
@@ -52,7 +53,7 @@ class SidebarUserProfile extends StatelessWidget {
                     Text(
                       user.role,
                       style: const TextStyle(
-                        color: Color(0xFF667085),
+                        color: AppColors.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -90,7 +91,7 @@ class SidebarUserProfile extends StatelessWidget {
               },
               child: const Text(
                 '退出登录',
-                style: TextStyle(color: Color(0xFFD92D20)),
+                style: TextStyle(color: AppColors.error),
               ),
             ),
           ],
@@ -138,7 +139,7 @@ class _UserProfileContent extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF101828),
+                        color: AppColors.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -149,7 +150,7 @@ class _UserProfileContent extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF667085),
+                        color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -159,7 +160,7 @@ class _UserProfileContent extends StatelessWidget {
               const Icon(
                 Icons.keyboard_arrow_right,
                 size: 18,
-                color: Color(0xFF98A2B3),
+                color: AppColors.textTertiary,
               ),
             ],
           ],
@@ -189,11 +190,11 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return CircleAvatar(
       radius: 18,
-      backgroundColor: const Color(0xFF1F6FEB),
+      backgroundColor: AppColors.brand,
       child: Text(
         user.avatarInitials,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.white,
           fontSize: 13,
           fontWeight: FontWeight.w700,
         ),
@@ -212,7 +213,7 @@ class _DialogActionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF667085)),
+        Icon(icon, size: 18, color: AppColors.textSecondary),
         const SizedBox(width: 8),
         Text(text),
       ],

@@ -73,6 +73,7 @@ void main() {
     final mainDart = File('lib/main.dart').readAsStringSync();
 
     expect(pubspec, contains('window_manager:'));
+    expect(mainDart, contains("import 'app/theme/app_colors.dart';"));
     expect(
       mainDart,
       contains("import 'package:window_manager/window_manager.dart';"),
@@ -82,7 +83,7 @@ void main() {
     expect(mainDart, contains('size: const Size(1280, 800)'));
     expect(mainDart, contains('minimumSize: const Size(1280, 800)'));
     expect(mainDart, contains('center: true'));
-    expect(mainDart, contains('backgroundColor: const Color(0xFFFAFBFC)'));
+    expect(mainDart, contains('backgroundColor: AppColors.windowBackground'));
     expect(mainDart, contains("title: 'QSDMS-千树数据管理系统'"));
     expect(mainDart, contains('titleBarStyle: TitleBarStyle.hidden'));
     expect(mainDart, contains('windowButtonVisibility: Platform.isMacOS'));

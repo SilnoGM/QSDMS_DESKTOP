@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
+
 /// 侧边栏展示状态。
 ///
 /// 展开状态展示图标、中文文案、徽标、公告卡片和用户信息；折叠状态只保留
@@ -15,7 +17,7 @@ class SidebarBadgeConfig {
     required this.type,
     this.count,
     this.label,
-    this.color = const Color(0xFFD92D20),
+    this.color = AppColors.error,
   });
 
   final SidebarBadgeType type;

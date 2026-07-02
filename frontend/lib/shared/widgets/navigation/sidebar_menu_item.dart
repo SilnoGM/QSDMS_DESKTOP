@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
 import 'sidebar_models.dart';
 
 /// 侧边栏单个菜单项。
@@ -23,10 +24,10 @@ class SidebarMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEnabled = item.enabled;
     final foregroundColor = isActive
-        ? const Color(0xFF1F6FEB)
+        ? AppColors.brand
         : isEnabled
-        ? const Color(0xFF667085)
-        : const Color(0xFF98A2B3);
+        ? AppColors.textSecondary
+        : AppColors.textTertiary;
     final tooltipMessage = item.badge?.displayText == null
         ? item.label
         : '${item.label}，${item.badge!.displayText}';
@@ -81,7 +82,7 @@ class _SidebarMenuItemContent extends StatelessWidget {
       alignment: Alignment.center,
       padding: EdgeInsets.symmetric(horizontal: showExpandedContent ? 12 : 0),
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFEAF2FF) : Colors.transparent,
+        color: isActive ? AppColors.brandSubtle : AppColors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: showExpandedContent
@@ -95,9 +96,7 @@ class _SidebarMenuItemContent extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: isActive
-                          ? const Color(0xFF1F6FEB)
-                          : const Color(0xFF344054),
+                      color: isActive ? AppColors.brand : AppColors.textBody,
                       fontSize: 14,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                     ),

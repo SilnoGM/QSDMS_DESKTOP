@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
+
 /// 业务页面占位标记。
 ///
 /// 当前阶段只需要证明路由和侧边栏菜单已经联动，所以这里保持轻量的文字标记。
@@ -21,7 +23,7 @@ class PageMarker extends StatelessWidget {
           Text(
             '当前页面：$title',
             style: theme.textTheme.headlineMedium?.copyWith(
-              color: const Color(0xFF1F2937),
+              color: AppColors.textHeading,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -29,7 +31,7 @@ class PageMarker extends StatelessWidget {
           Text(
             description,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF667085),
+              color: AppColors.textSecondary,
             ),
           ),
         ],

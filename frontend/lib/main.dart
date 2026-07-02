@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'app/theme/app_colors.dart';
 import 'app/qsdms_app.dart';
 
 void main() async {
@@ -23,7 +24,7 @@ Future<void> _configureDesktopWindow() async {
     size: const Size(1280, 800),
     minimumSize: const Size(1280, 800),
     center: true,
-    backgroundColor: const Color(0xFFFAFBFC),
+    backgroundColor: AppColors.windowBackground,
     title: 'QSDMS-千树数据管理系统',
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: Platform.isMacOS,

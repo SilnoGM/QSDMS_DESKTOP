@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
 import 'sidebar_models.dart';
 
 /// 侧边栏底部通知公告卡片。
@@ -23,9 +24,9 @@ class SidebarNoticeCard extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: 104),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF2FF),
+              color: AppColors.brandSubtle,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFD6E6FF)),
+              border: Border.all(color: AppColors.brandSubtleBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +34,7 @@ class SidebarNoticeCard extends StatelessWidget {
                 const Icon(
                   Icons.campaign_outlined,
                   size: 22,
-                  color: Color(0xFF1F6FEB),
+                  color: AppColors.brand,
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -41,7 +42,7 @@ class SidebarNoticeCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF175CD3),
+                    color: AppColors.brandText,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -52,7 +53,7 @@ class SidebarNoticeCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF475467),
+                    color: AppColors.textMuted,
                     fontSize: 12,
                     height: 1.35,
                   ),

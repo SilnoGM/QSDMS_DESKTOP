@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
 import 'sidebar_brand.dart';
 import 'sidebar_menu_item.dart';
 import 'sidebar_models.dart';
@@ -44,8 +45,8 @@ class QsdmsSidebar extends StatelessWidget {
       width: width,
       height: double.infinity,
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: Color(0xFFE5EAF0))),
+        color: AppColors.surface,
+        border: Border(right: BorderSide(color: AppColors.border)),
       ),
       child: SafeArea(
         bottom: false,

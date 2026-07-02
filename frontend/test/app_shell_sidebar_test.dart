@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:qsdms_desktop_frontend/app/layout/app_shell.dart';
+import 'package:qsdms_desktop_frontend/app/theme/app_colors.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/qsdms_sidebar.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_models.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/window/app_window_title_bar.dart';
@@ -117,7 +118,7 @@ void main() {
     );
     final decoration = dashboardItem.decoration! as BoxDecoration;
 
-    expect(decoration.color, const Color(0xFFEAF2FF));
+    expect(decoration.color, AppColors.brandSubtle);
 
     await tester.tap(find.text('工作台'));
     await tester.pumpAndSettle();

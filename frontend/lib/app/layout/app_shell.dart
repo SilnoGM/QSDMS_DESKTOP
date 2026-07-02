@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../shared/widgets/navigation/qsdms_sidebar.dart';
 import '../../shared/widgets/navigation/sidebar_models.dart';
 import '../../shared/widgets/window/app_window_title_bar.dart';
+import '../theme/app_colors.dart';
 import 'app_breakpoints.dart';
 import 'app_layout_mode.dart';
 
@@ -64,7 +65,9 @@ class AppShell extends StatelessWidget {
                   ),
                   Expanded(
                     child: DecoratedBox(
-                      decoration: const BoxDecoration(color: Color(0xFFF6F8FA)),
+                      decoration: const BoxDecoration(
+                        color: AppColors.pageBackground,
+                      ),
                       child: child,
                     ),
                   ),

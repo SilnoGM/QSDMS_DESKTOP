@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../../app/theme/app_colors.dart';
+
 /// 应用窗口栏平台布局模式。
 ///
 /// macOS 和 Windows 的窗口控制按钮位置不同，这里只抽象按钮区域位置，
@@ -45,8 +47,8 @@ class AppWindowTitleBar extends StatelessWidget {
       height: height,
       child: DecoratedBox(
         decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(bottom: BorderSide(color: Color(0xFFE5EAF0))),
+          color: AppColors.surface,
+          border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
