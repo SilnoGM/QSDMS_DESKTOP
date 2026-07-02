@@ -116,6 +116,7 @@ class _UserProfileContent extends StatelessWidget {
     final profile = InkWell(
       key: const ValueKey('sidebar-user-profile'),
       borderRadius: BorderRadius.circular(8),
+      mouseCursor: SystemMouseCursors.click,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(8),

@@ -123,6 +123,9 @@ class _SidebarMenuItemContent extends StatelessWidget {
 
     final tappable = InkWell(
       borderRadius: BorderRadius.circular(8),
+      mouseCursor: isEnabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
       onTap: isEnabled && !isActive ? () => onSelected?.call(item) : null,
       child: content,
     );

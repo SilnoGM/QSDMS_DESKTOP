@@ -123,6 +123,65 @@ void main() {
     expect(selectedCount, 0);
   });
 
+  testWidgets('菜单项和用户信息区使用点击鼠标指针', (tester) async {
+    const menuItems = [
+      SidebarMenuItemConfig(
+        id: 'dashboard',
+        label: '工作台',
+        routeName: '/',
+        icon: Icons.dashboard_outlined,
+      ),
+      SidebarMenuItemConfig(
+        id: 'clickable',
+        label: '可点击菜单',
+        routeName: '/clickable',
+        icon: Icons.dataset_outlined,
+      ),
+      SidebarMenuItemConfig(
+        id: 'disabled',
+        label: '禁用菜单',
+        routeName: '/disabled',
+        icon: Icons.settings_outlined,
+        enabled: false,
+      ),
+    ];
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: menuItems,
+            activeItemId: 'dashboard',
+            displayMode: SidebarDisplayMode.expanded,
+            user: QsdmsSidebarDefaults.user,
+            notice: QsdmsSidebarDefaults.notice,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final clickableMenuInkWell = tester.widget<InkWell>(
+      find.ancestor(
+        of: find.byKey(const ValueKey('sidebar-menu-clickable')),
+        matching: find.byType(InkWell),
+      ),
+    );
+    final disabledMenuInkWell = tester.widget<InkWell>(
+      find.ancestor(
+        of: find.byKey(const ValueKey('sidebar-menu-disabled')),
+        matching: find.byType(InkWell),
+      ),
+    );
+    final userProfileInkWell = tester.widget<InkWell>(
+      find.byKey(const ValueKey('sidebar-user-profile')),
+    );
+
+    expect(clickableMenuInkWell.mouseCursor, SystemMouseCursors.click);
+    expect(disabledMenuInkWell.mouseCursor, SystemMouseCursors.basic);
+    expect(userProfileInkWell.mouseCursor, SystemMouseCursors.click);
+  });
+
   testWidgets('用户弹窗展示账户操作且退出登录触发回调', (tester) async {
     var logoutCount = 0;
 
