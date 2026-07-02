@@ -47,19 +47,35 @@ class MainFlutterWindow: NSWindow {
     guard let closeButton = standardWindowButton(.closeButton),
           let minimizeButton = standardWindowButton(.miniaturizeButton),
           let zoomButton = standardWindowButton(.zoomButton),
-          let titleBarView = closeButton.superview
+          let trafficLightButtonContainer = closeButton.superview,
+          let titleBarView = trafficLightButtonContainer.superview
     else {
       return
     }
 
-    let titleBarBottomY = max(0, titleBarView.bounds.height - customTitleBarHeight)
-    let buttonOffsetY = max(0, (customTitleBarHeight - closeButton.frame.height) / 2)
-    let centeredY = titleBarBottomY + buttonOffsetY
+    titleBarView.layoutSubtreeIfNeeded()
 
-    closeButton.setFrameOrigin(NSPoint(x: closeButton.frame.origin.x, y: centeredY))
-    minimizeButton.setFrameOrigin(NSPoint(x: minimizeButton.frame.origin.x, y: centeredY))
-    zoomButton.setFrameOrigin(NSPoint(x: zoomButton.frame.origin.x, y: centeredY))
+    // macOS 原生标题栏视图通常只有 32px，高于/低于 Flutter 40px 窗口栏时
+    // 都要按 40px 目标区域重新定位；这里允许负值，才能把按钮组下移到
+    // Flutter 窗口栏中心。
+    let titleBarBottomY = titleBarView.bounds.height - customTitleBarHeight
+    let containerOffsetY = max(
+      0,
+      (customTitleBarHeight - trafficLightButtonContainer.frame.height) / 2)
+    let centeredY = titleBarBottomY + containerOffsetY
 
+    trafficLightButtonContainer.setFrameOrigin(
+      NSPoint(x: trafficLightButtonContainer.frame.origin.x, y: centeredY))
+
+    let buttonOffsetY = max(
+      0,
+      (trafficLightButtonContainer.bounds.height - closeButton.frame.height) / 2)
+
+    closeButton.setFrameOrigin(NSPoint(x: closeButton.frame.origin.x, y: buttonOffsetY))
+    minimizeButton.setFrameOrigin(NSPoint(x: minimizeButton.frame.origin.x, y: buttonOffsetY))
+    zoomButton.setFrameOrigin(NSPoint(x: zoomButton.frame.origin.x, y: buttonOffsetY))
+
+    trafficLightButtonContainer.needsLayout = true
     titleBarView.needsLayout = true
   }
 }

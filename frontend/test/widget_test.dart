@@ -113,10 +113,28 @@ void main() {
     expect(macWindow, contains('standardWindowButton(.closeButton)'));
     expect(macWindow, contains('standardWindowButton(.miniaturizeButton)'));
     expect(macWindow, contains('standardWindowButton(.zoomButton)'));
+    expect(macWindow, contains('trafficLightButtonContainer'));
+    expect(macWindow, contains('trafficLightButtonContainer.superview'));
+    expect(macWindow, contains('trafficLightButtonContainer.setFrameOrigin'));
+    expect(
+      macWindow,
+      contains(
+        'trafficLightButtonContainer.bounds.height - closeButton.frame.height',
+      ),
+    );
+    expect(macWindow, contains('closeButton.setFrameOrigin'));
+    expect(macWindow, contains('minimizeButton.setFrameOrigin'));
+    expect(macWindow, contains('zoomButton.setFrameOrigin'));
     expect(macWindow, contains('titleBarView.bounds.height'));
     expect(
       macWindow,
       contains('titleBarView.bounds.height - customTitleBarHeight'),
+    );
+    expect(
+      macWindow,
+      contains(
+        'let titleBarBottomY = titleBarView.bounds.height - customTitleBarHeight',
+      ),
     );
     expect(macWindow, contains('setFrameOrigin'));
     expect(macWindow, contains('NSWindow.didResizeNotification'));
