@@ -31,13 +31,16 @@ class SidebarMenuItem extends StatelessWidget {
   /// 菜单项占用的完整垂直空间。
   static const outerHeight = height + verticalPadding * 2;
 
+  /// 活跃菜单项的消费级胶囊圆角。
+  static const activeRadius = 14.0;
+
   bool get _isExpanded => displayMode == SidebarDisplayMode.expanded;
 
   @override
   Widget build(BuildContext context) {
     final isEnabled = item.enabled;
     final foregroundColor = isActive
-        ? AppColors.brand
+        ? AppColors.white
         : isEnabled
         ? AppColors.textSecondary
         : AppColors.textTertiary;
@@ -96,7 +99,7 @@ class _SidebarMenuItemContent extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: showExpandedContent ? 12 : 0),
       decoration: BoxDecoration(
         color: AppColors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(SidebarMenuItem.activeRadius),
       ),
       child: showExpandedContent
           ? Row(
@@ -109,9 +112,9 @@ class _SidebarMenuItemContent extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: isActive ? AppColors.brand : AppColors.textBody,
+                      color: isActive ? AppColors.white : AppColors.textBody,
                       fontSize: 14,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ),
@@ -133,22 +136,33 @@ class _SidebarMenuItemContent extends StatelessWidget {
             ),
     );
 
-    // 菜单项自身只做轻微横向跟随和缩放，选中背景滑动由父级侧边栏统一处理。
+    // 菜单项自身负责消费级的轻微 pop 和横向跟随，选中胶囊由父级侧边栏统一处理。
     final animatedContent = content
         .animate(
           key: ValueKey('sidebar-menu-motion-${item.id}'),
           target: isActive ? 1 : 0,
         )
-        .moveX(begin: 0, end: 3, duration: 210.ms, curve: Curves.easeOutCubic)
+        .moveX(
+          begin: 0,
+          end: showExpandedContent ? 4 : 0,
+          duration: 230.ms,
+          curve: Curves.easeOutBack,
+        )
         .scaleXY(
           begin: 1,
-          end: 1.012,
-          duration: 210.ms,
-          curve: Curves.easeOutCubic,
+          end: 1.035,
+          duration: 230.ms,
+          curve: Curves.easeOutBack,
         );
 
     final tappable = InkWell(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(SidebarMenuItem.activeRadius),
+      hoverColor: isActive
+          ? AppColors.transparent
+          : AppColors.menuHoverBackground,
+      focusColor: AppColors.menuHoverBackground,
+      highlightColor: AppColors.menuHoverBackground,
+      splashColor: AppColors.brandSelectedGradientEnd.withValues(alpha: 0.18),
       mouseCursor: isEnabled
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,

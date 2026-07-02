@@ -167,8 +167,8 @@ class _SidebarSpringIndicatorState extends State<_SidebarSpringIndicator>
 
   static const _spring = SpringDescription(
     mass: 1,
-    stiffness: 430,
-    damping: 30,
+    stiffness: 520,
+    damping: 25,
   );
 
   @override
@@ -217,25 +217,53 @@ class _SidebarSpringIndicatorState extends State<_SidebarSpringIndicator>
         child: DecoratedBox(
           key: const ValueKey('sidebar-active-menu-indicator-surface'),
           decoration: BoxDecoration(
-            color: AppColors.brandSelectedBackground,
-            border: Border.all(color: AppColors.brandSelectedBorder),
-            borderRadius: BorderRadius.circular(8),
+            gradient: const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                AppColors.brandSelectedGradientStart,
+                AppColors.brandSelectedGradientEnd,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(SidebarMenuItem.activeRadius),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.brandSelectedShadow,
+                blurRadius: 20,
+                spreadRadius: -7,
+                offset: Offset(0, 10),
+              ),
+            ],
           ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: SizedBox(
-                width: 3,
-                height: 22,
-                child: DecoratedBox(
-                  key: const ValueKey('sidebar-active-menu-indicator-accent'),
-                  decoration: BoxDecoration(
-                    color: AppColors.brand,
-                    borderRadius: BorderRadius.circular(999),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(SidebarMenuItem.activeRadius),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -18,
+                  right: 18,
+                  child: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.20),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  left: 16,
+                  bottom: -24,
+                  child: Container(
+                    width: 78,
+                    height: 78,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.10),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

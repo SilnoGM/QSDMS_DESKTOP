@@ -146,19 +146,36 @@ void main() {
     final activeIndicatorSize = tester.getSize(
       find.byKey(const ValueKey('sidebar-active-menu-indicator-surface')),
     );
-    final indicatorAccent = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('sidebar-active-menu-indicator-accent')),
+    final activeIcon = tester.widget<Icon>(
+      find.descendant(
+        of: find.byKey(const ValueKey('sidebar-menu-dashboard')),
+        matching: find.byIcon(Icons.dashboard_outlined),
+      ),
     );
-    final accentDecoration = indicatorAccent.decoration as BoxDecoration;
+    final activeText = tester.widget<Text>(find.text('工作台'));
+    final indicatorGradient = indicatorDecoration.gradient as LinearGradient;
 
     expect(activeIndicatorSize.width, greaterThanOrEqualTo(200));
     expect(activeIndicatorSize.height, SidebarMenuItem.height);
-    expect(indicatorDecoration.color, AppColors.brandSelectedBackground);
+    expect(indicatorDecoration.color, isNull);
     expect(
-      indicatorDecoration.border?.top.color,
-      AppColors.brandSelectedBorder,
+      indicatorDecoration.borderRadius,
+      BorderRadius.circular(SidebarMenuItem.activeRadius),
     );
-    expect(accentDecoration.color, AppColors.brand);
+    expect(indicatorGradient.colors, [
+      AppColors.brandSelectedGradientStart,
+      AppColors.brandSelectedGradientEnd,
+    ]);
+    expect(
+      indicatorDecoration.boxShadow?.single.color,
+      AppColors.brandSelectedShadow,
+    );
+    expect(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-accent')),
+      findsNothing,
+    );
+    expect(activeIcon.color, AppColors.white);
+    expect(activeText.style?.color, AppColors.white);
     expect(
       find.byKey(const ValueKey('sidebar-menu-motion-dashboard')),
       findsOneWidget,
@@ -211,6 +228,40 @@ void main() {
       movedTop.dy - initialTop.dy,
       closeTo(SidebarMenuItem.outerHeight * 2, 0.01),
     );
+  });
+
+  testWidgets('折叠状态选中菜单保持消费级胶囊视觉', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: QsdmsSidebarDefaults.menuItems,
+            activeItemId: 'dashboard',
+            displayMode: SidebarDisplayMode.collapsed,
+            user: QsdmsSidebarDefaults.user,
+            notice: QsdmsSidebarDefaults.notice,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final activeIndicatorSurface = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-surface')),
+    );
+    final indicatorDecoration =
+        activeIndicatorSurface.decoration as BoxDecoration;
+    final activeIndicatorSize = tester.getSize(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-surface')),
+    );
+    final indicatorGradient = indicatorDecoration.gradient as LinearGradient;
+
+    expect(activeIndicatorSize.width, closeTo(48, 1));
+    expect(activeIndicatorSize.height, SidebarMenuItem.height);
+    expect(indicatorGradient.colors, [
+      AppColors.brandSelectedGradientStart,
+      AppColors.brandSelectedGradientEnd,
+    ]);
   });
 
   testWidgets('菜单项和用户信息区使用点击鼠标指针', (tester) async {
