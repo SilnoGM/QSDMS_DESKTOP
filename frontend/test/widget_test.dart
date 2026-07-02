@@ -85,7 +85,7 @@ void main() {
     expect(mainDart, contains('backgroundColor: const Color(0xFFFAFBFC)'));
     expect(mainDart, contains("title: 'QSDMS-千树数据管理系统'"));
     expect(mainDart, contains('titleBarStyle: TitleBarStyle.hidden'));
-    expect(mainDart, contains('windowButtonVisibility: Platform.isMacOS'));
+    expect(mainDart, contains('windowButtonVisibility: false'));
     expect(mainDart, contains('windowManager.waitUntilReadyToShow'));
     expect(mainDart, contains('await windowManager.show();'));
     expect(mainDart, contains('await windowManager.focus();'));
