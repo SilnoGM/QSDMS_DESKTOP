@@ -116,32 +116,30 @@ class _UserProfileContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final profile = InkWell(
       key: const ValueKey('sidebar-user-profile'),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(18),
       mouseCursor: SystemMouseCursors.click,
       onTap: onTap,
       child: DecoratedBox(
         key: const ValueKey('sidebar-user-profile-capsule'),
         decoration: BoxDecoration(
-          color: isExpanded ? AppColors.brandSubtle : AppColors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: isExpanded
-              ? Border.all(color: AppColors.brandSubtleBorder)
-              : null,
+          color: isExpanded ? AppColors.white : AppColors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          border: isExpanded ? Border.all(color: AppColors.border) : null,
           boxShadow: isExpanded
               ? [
                   BoxShadow(
-                    color: AppColors.brand.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    spreadRadius: -10,
-                    offset: const Offset(0, 10),
+                    color: AppColors.textPrimary.withValues(alpha: 0.08),
+                    blurRadius: 18,
+                    spreadRadius: -12,
+                    offset: const Offset(0, 12),
                   ),
                 ]
               : null,
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: isExpanded ? 10 : 8,
-            vertical: isExpanded ? 9 : 8,
+            horizontal: isExpanded ? 9 : 8,
+            vertical: isExpanded ? 8 : 8,
           ),
           child: Row(
             mainAxisAlignment: isExpanded
@@ -153,7 +151,7 @@ class _UserProfileContent extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(child: _UserProfileText(user: user)),
                 const SizedBox(width: 8),
-                const _ArrowSurface(),
+                const _ActionIcon(),
               ],
             ],
           ),
@@ -211,30 +209,23 @@ class _UserProfileText extends StatelessWidget {
   }
 }
 
-/// 右侧箭头的轻量承载面。
+/// 右侧账户操作图标。
 ///
-/// 箭头不直接裸露在文字后方，能让用户区更像一个明确可点击入口；同时保持
-/// 低对比度，避免和侧边栏菜单选中态争抢注意力。
-class _ArrowSurface extends StatelessWidget {
-  const _ArrowSurface();
+/// 参考图使用的是轻量退出/账户操作图标。这里仍然只作为账户入口的视觉提示，
+/// 真正退出登录继续留在弹窗动作里，避免用户误触整块区域就直接退出。
+class _ActionIcon extends StatelessWidget {
+  const _ActionIcon();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.square(
+    return const SizedBox.square(
       dimension: 28,
-      child: DecoratedBox(
-        key: const ValueKey('sidebar-user-profile-arrow-surface'),
-        decoration: BoxDecoration(
-          color: AppColors.white.withValues(alpha: 0.72),
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.white.withValues(alpha: 0.86)),
-        ),
-        child: const Center(
-          child: Icon(
-            Icons.keyboard_arrow_right,
-            size: 17,
-            color: AppColors.brandText,
-          ),
+      child: Center(
+        child: Icon(
+          key: ValueKey('sidebar-user-profile-action-icon'),
+          Icons.logout_rounded,
+          size: 19,
+          color: AppColors.textTertiary,
         ),
       ),
     );
@@ -250,50 +241,36 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox.square(
       dimension: 38,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.brand, AppColors.link],
-                ),
-                border: Border.all(
-                  color: AppColors.white.withValues(alpha: 0.92),
-                  width: 2,
-                ),
+      child: DecoratedBox(
+        key: const ValueKey('sidebar-user-profile-avatar-tile'),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.34),
+          borderRadius: BorderRadius.circular(13),
+        ),
+        child: Center(
+          child: Container(
+            width: 29,
+            height: 29,
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.white.withValues(alpha: 0.96),
+                width: 1,
               ),
-              child: Center(
-                child: Text(
-                  user.avatarInitials,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
+            ),
+            child: Center(
+              child: Text(
+                user.avatarInitials,
+                style: const TextStyle(
+                  color: AppColors.error,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
           ),
-          Positioned(
-            right: 1,
-            bottom: 1,
-            child: Container(
-              key: const ValueKey('sidebar-user-profile-status-dot'),
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                color: AppColors.success,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.surface, width: 2),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

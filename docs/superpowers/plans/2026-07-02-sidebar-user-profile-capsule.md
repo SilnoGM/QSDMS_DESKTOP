@@ -2,9 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 将侧边栏底部个人信息区优化为“轻快品牌胶囊”样式，并保持展开、折叠、弹窗和宽度动画稳定。
+**Goal:** 将侧边栏底部个人信息区优化为参考图风格的白色账号胶囊，并保持展开、折叠、弹窗和宽度动画稳定。
 
-**Architecture:** 只改 `SidebarUserProfile` 的局部渲染结构，保留 `SidebarUserInfo` 数据模型和 `QsdmsSidebar` 组合方式。新增独立 widget 测试文件，避免混入当前 dirty 的 `app_shell_sidebar_test.dart`。
+**Architecture:** 只改 `SidebarUserProfile` 的局部渲染结构，保留 `SidebarUserInfo` 数据模型和 `QsdmsSidebar` 组合方式。独立 widget 测试负责约束白色胶囊、粉色头像底、右侧低强调操作图标和弹窗入口。
+
+**Revision:** 初版蓝色品牌胶囊和在线状态点已被用户参考图覆盖。当前最终实现以白色账号胶囊为准，旧的品牌蓝和状态点细节不再作为验收标准。
 
 **Tech Stack:** Flutter Desktop, Material 3, `flutter_test`, existing `AppColors`, no new dependencies.
 
@@ -13,9 +15,9 @@
 ## File Structure
 
 - Create: `frontend/test/sidebar_user_profile_capsule_test.dart`
-  - 负责验证用户区展开态胶囊视觉、折叠态 Tooltip、在线状态点和弹窗入口不回归。
+  - 负责验证用户区展开态白色账号胶囊、折叠态 Tooltip、粉色头像底、右侧操作图标和弹窗入口不回归。
 - Modify: `frontend/lib/shared/widgets/navigation/sidebar_user_profile.dart`
-  - 负责用户区外观、头像样式、在线状态点、右侧圆形箭头和弹窗标题头像复用。
+  - 负责用户区外观、头像样式、右侧操作图标和弹窗标题头像复用。
 
 ## Task 1: Failing Widget Tests
 

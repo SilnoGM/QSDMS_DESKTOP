@@ -17,7 +17,7 @@ void main() {
     );
   }
 
-  testWidgets('展开状态展示轻快品牌胶囊用户区', (tester) async {
+  testWidgets('展开状态展示参考图风格白色账户胶囊', (tester) async {
     await tester.pumpWidget(buildProfile(SidebarDisplayMode.expanded));
     await tester.pumpAndSettle();
 
@@ -25,24 +25,29 @@ void main() {
       find.byKey(const ValueKey('sidebar-user-profile-capsule')),
     );
     final decoration = capsule.decoration as BoxDecoration;
-    final arrowSurface = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('sidebar-user-profile-arrow-surface')),
+    final avatarTile = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('sidebar-user-profile-avatar-tile')),
     );
-    final arrowDecoration = arrowSurface.decoration as BoxDecoration;
+    final avatarDecoration = avatarTile.decoration as BoxDecoration;
+    final actionIcon = tester.widget<Icon>(
+      find.byKey(const ValueKey('sidebar-user-profile-action-icon')),
+    );
 
     expect(find.text('SilnoGM'), findsOneWidget);
     expect(find.text('系统管理员'), findsOneWidget);
-    expect(decoration.color, AppColors.brandSubtle);
-    expect(decoration.border?.top.color, AppColors.brandSubtleBorder);
+    expect(decoration.color, AppColors.white);
+    expect(decoration.border?.top.color, AppColors.border);
     expect(decoration.boxShadow, isNotEmpty);
-    expect(arrowDecoration.shape, BoxShape.circle);
+    expect(avatarDecoration.color, AppColors.error.withValues(alpha: 0.34));
+    expect(actionIcon.icon, Icons.logout_rounded);
+    expect(actionIcon.color, AppColors.textTertiary);
     expect(
       find.byKey(const ValueKey('sidebar-user-profile-status-dot')),
-      findsOneWidget,
+      findsNothing,
     );
   });
 
-  testWidgets('折叠状态只展示头像和状态点并保留 Tooltip', (tester) async {
+  testWidgets('折叠状态只展示头像并保留 Tooltip', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -66,11 +71,15 @@ void main() {
     expect(find.text('系统管理员'), findsNothing);
     expect(find.byTooltip('SilnoGM，系统管理员'), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('sidebar-user-profile-status-dot')),
+      find.byKey(const ValueKey('sidebar-user-profile-avatar-tile')),
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey('sidebar-user-profile-arrow-surface')),
+      find.byKey(const ValueKey('sidebar-user-profile-status-dot')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('sidebar-user-profile-action-icon')),
       findsNothing,
     );
   });
