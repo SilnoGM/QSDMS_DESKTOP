@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../shared/widgets/navigation/qsdms_sidebar.dart';
 import '../../shared/widgets/navigation/sidebar_models.dart';
+import '../../shared/widgets/navigation/sidebar_selection_motion.dart';
 import '../../shared/widgets/window/app_window_title_bar.dart';
 import '../theme/app_colors.dart';
 import 'app_breakpoints.dart';
@@ -35,6 +36,7 @@ class AppShell extends StatelessWidget {
       return;
     }
 
+    SidebarSelectionMotion.begin(fromItemId: activeMenuId, toItemId: item.id);
     Get.offNamed(item.routeName);
   }
 

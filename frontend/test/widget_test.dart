@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import 'package:qsdms_desktop_frontend/app/qsdms_app.dart';
 import 'package:qsdms_desktop_frontend/modules/home/home_controller.dart';
+import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_menu_item.dart';
 
 void main() {
   Future<void> pumpApp(WidgetTester tester) async {
@@ -47,6 +48,42 @@ void main() {
 
     expect(find.text('当前页面：工作台'), findsOneWidget);
     expect(find.text('这里是工作台页面'), findsOneWidget);
+  });
+
+  testWidgets('真实路由切换时菜单选中背景从旧菜单位置滑向新菜单位置', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1440, 900);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await pumpApp(tester);
+
+    final indicatorFinder = find.byKey(
+      const ValueKey('sidebar-active-menu-indicator-surface'),
+    );
+    final initialTop = tester.getTopLeft(indicatorFinder).dy;
+    final targetTop = initialTop + SidebarMenuItem.outerHeight;
+
+    await tester.tap(find.text('基础数据'));
+    await tester.pump();
+
+    final firstFrameTop = tester.getTopLeft(indicatorFinder).dy;
+
+    expect(firstFrameTop, closeTo(initialTop, 0.01));
+
+    await tester.pump(const Duration(milliseconds: 250));
+
+    final middleFrameTop = tester.getTopLeft(indicatorFinder).dy;
+
+    expect(middleFrameTop, greaterThan(initialTop));
+    expect(middleFrameTop, lessThan(targetTop));
+
+    await tester.pumpAndSettle();
+
+    final settledTop = tester.getTopLeft(indicatorFinder).dy;
+
+    expect(settledTop, closeTo(targetTop, 0.01));
+    expect(find.text('当前页面：基础数据'), findsOneWidget);
   });
 
   testWidgets('首页依赖仍由 GetX 路由绑定注册', (tester) async {

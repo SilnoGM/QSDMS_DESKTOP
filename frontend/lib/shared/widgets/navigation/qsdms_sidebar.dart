@@ -6,6 +6,7 @@ import 'sidebar_brand.dart';
 import 'sidebar_menu_item.dart';
 import 'sidebar_models.dart';
 import 'sidebar_notice_card.dart';
+import 'sidebar_selection_motion.dart';
 import 'sidebar_user_profile.dart';
 
 /// QSDMS 桌面端侧边栏。
@@ -102,9 +103,30 @@ class _SidebarMenuList extends StatelessWidget {
         SidebarMenuItem.outerHeight * activeIndex;
   }
 
+  double? _consumeInitialIndicatorOffset(int activeIndex) {
+    if (activeIndex < 0) {
+      return null;
+    }
+
+    final transition = SidebarSelectionMotion.consumeFor(activeItemId);
+    if (transition == null) {
+      return null;
+    }
+
+    final fromIndex = items.indexWhere(
+      (item) => item.id == transition.fromItemId,
+    );
+    if (fromIndex < 0) {
+      return null;
+    }
+
+    return _indicatorOffset(fromIndex);
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeIndex = _activeIndex;
+    final initialIndicatorOffset = _consumeInitialIndicatorOffset(activeIndex);
 
     return SingleChildScrollView(
       child: SizedBox(
@@ -121,6 +143,7 @@ class _SidebarMenuList extends StatelessWidget {
                   child: _SidebarSpringIndicator(
                     key: const ValueKey('sidebar-active-menu-spring-indicator'),
                     offsetY: _indicatorOffset(activeIndex),
+                    initialOffsetY: initialIndicatorOffset,
                   ),
                 ),
               ),
@@ -152,9 +175,14 @@ class _SidebarMenuList extends StatelessWidget {
 /// 这里不用隐式布局动画，而是用弹簧模拟驱动 `Transform.translate`。这样菜单切换时
 /// 背景会有轻微惯性，同时 surface 自身始终保持明确宽高，避免背景被压缩到不可见。
 class _SidebarSpringIndicator extends StatefulWidget {
-  const _SidebarSpringIndicator({required this.offsetY, super.key});
+  const _SidebarSpringIndicator({
+    required this.offsetY,
+    this.initialOffsetY,
+    super.key,
+  });
 
   final double offsetY;
+  final double? initialOffsetY;
 
   @override
   State<_SidebarSpringIndicator> createState() =>
@@ -176,8 +204,9 @@ class _SidebarSpringIndicatorState extends State<_SidebarSpringIndicator>
     super.initState();
     _controller = AnimationController.unbounded(
       vsync: this,
-      value: widget.offsetY,
+      value: widget.initialOffsetY ?? widget.offsetY,
     );
+    _animateInitialRouteTransition();
   }
 
   @override
@@ -190,6 +219,21 @@ class _SidebarSpringIndicatorState extends State<_SidebarSpringIndicator>
 
     // 保留当前速度进入下一段弹簧动画，连续快速切换菜单时会更自然。
     final velocity = _controller.velocity.isFinite ? _controller.velocity : 0.0;
+    _animateToTarget(velocity: velocity);
+  }
+
+  void _animateInitialRouteTransition() {
+    if (widget.initialOffsetY == null ||
+        widget.initialOffsetY == widget.offsetY) {
+      return;
+    }
+
+    // 控制器初始值仍是旧菜单位置；立即启动弹簧后，首帧没有时间流逝，
+    // 仍会画在旧位置，后续帧再自然滑向新位置。
+    _animateToTarget();
+  }
+
+  void _animateToTarget({double velocity = 0.0}) {
     _controller.animateWith(
       SpringSimulation(_spring, _controller.value, widget.offsetY, velocity),
     );
