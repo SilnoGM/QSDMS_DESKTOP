@@ -52,6 +52,10 @@ void main() {
     );
     final brandImageProvider = brandImage.image as AssetImage;
     expect(brandImageProvider.assetName, 'assets/images/Q.png');
+    expect(
+      tester.getSize(find.byKey(const ValueKey('sidebar-brand-image'))),
+      const Size(40, 40),
+    );
     expect(find.text('工作台'), findsNothing);
     expect(find.text('基础数据'), findsNothing);
     expect(find.text('系统设置'), findsNothing);

@@ -69,8 +69,8 @@ class _CollapsedBrandLogo extends StatelessWidget {
     return Image.asset(
       assetPath,
       key: const ValueKey('sidebar-brand-image'),
-      width: 32,
-      height: 32,
+      width: 40,
+      height: 40,
       fit: BoxFit.contain,
       alignment: Alignment.center,
       semanticLabel: 'QSDMS',
