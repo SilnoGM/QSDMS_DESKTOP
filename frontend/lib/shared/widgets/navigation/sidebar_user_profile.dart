@@ -19,62 +19,17 @@ class SidebarUserProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = InkWell(
-      key: const ValueKey('sidebar-user-profile'),
-      borderRadius: BorderRadius.circular(8),
-      onTap: () => _showUserDialog(context),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          mainAxisAlignment: _isExpanded
-              ? MainAxisAlignment.start
-              : MainAxisAlignment.center,
-          children: [
-            _Avatar(user: user),
-            if (_isExpanded) ...[
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF101828),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user.role,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF667085),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.keyboard_arrow_right,
-                size: 18,
-                color: Color(0xFF98A2B3),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canShowExpandedContent =
+            _isExpanded && constraints.maxWidth >= 160;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 10),
-      child: Tooltip(message: '${user.name}，${user.role}', child: profile),
+        return _UserProfileContent(
+          user: user,
+          isExpanded: canShowExpandedContent,
+          onTap: () => _showUserDialog(context),
+        );
+      },
     );
   }
 
@@ -141,6 +96,79 @@ class SidebarUserProfile extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _UserProfileContent extends StatelessWidget {
+  const _UserProfileContent({
+    required this.user,
+    required this.isExpanded,
+    required this.onTap,
+  });
+
+  final SidebarUserInfo user;
+  final bool isExpanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = InkWell(
+      key: const ValueKey('sidebar-user-profile'),
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          mainAxisAlignment: isExpanded
+              ? MainAxisAlignment.start
+              : MainAxisAlignment.center,
+          children: [
+            _Avatar(user: user),
+            if (isExpanded) ...[
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF101828),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      user.role,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF667085),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.keyboard_arrow_right,
+                size: 18,
+                color: Color(0xFF98A2B3),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 10),
+      child: Tooltip(message: '${user.name}，${user.role}', child: profile),
     );
   }
 }

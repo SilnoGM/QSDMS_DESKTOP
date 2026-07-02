@@ -124,6 +124,31 @@ void main() {
     expect(logoutCount, 1);
   });
 
+  testWidgets('用户区宽度动画中间帧不产生布局溢出', (tester) async {
+    Widget buildSidebar(SidebarDisplayMode displayMode) {
+      return MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: QsdmsSidebarDefaults.menuItems,
+            activeItemId: 'dashboard',
+            displayMode: displayMode,
+            user: QsdmsSidebarDefaults.user,
+            notice: QsdmsSidebarDefaults.notice,
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildSidebar(SidebarDisplayMode.collapsed));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(buildSidebar(SidebarDisplayMode.expanded));
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('公告卡片展开可见并触发回调，折叠状态隐藏', (tester) async {
     var noticeTapCount = 0;
 
