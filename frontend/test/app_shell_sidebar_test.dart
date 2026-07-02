@@ -55,7 +55,8 @@ void main() {
     final sidebar = tester.widget<QsdmsSidebar>(find.byType(QsdmsSidebar));
 
     expect(sidebar.displayMode, SidebarDisplayMode.expanded);
-    expect(find.text('QSDMS'), findsOneWidget);
+    expect(find.text('千树数据平台'), findsOneWidget);
+    expect(find.text('QSDMS'), findsNothing);
     expect(find.text('工作台'), findsOneWidget);
     expect(find.text('基础数据'), findsOneWidget);
     expect(find.text('系统设置'), findsOneWidget);

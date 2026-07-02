@@ -49,7 +49,7 @@ class SidebarBrand extends StatelessWidget {
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'QSDMS',
+                  '千树数据平台',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
