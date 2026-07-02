@@ -94,6 +94,15 @@ void main() {
     final dialogSurface = tester.widget<Dialog>(
       find.byKey(const ValueKey('sidebar-user-profile-dialog')),
     );
+    final dialogPanel = tester.widget<ConstrainedBox>(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog-panel')),
+    );
+    final dialogContent = tester.widget<Padding>(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog-content')),
+    );
+    final infoContent = tester.widget<Padding>(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog-info-content')),
+    );
     final editButton = tester.widget<ElevatedButton>(
       find.descendant(
         of: find.byKey(const ValueKey('sidebar-user-profile-edit-button')),
@@ -108,6 +117,12 @@ void main() {
     );
 
     expect(dialogSurface.backgroundColor, AppColors.white);
+    expect(dialogPanel.constraints.maxWidth, 420);
+    expect(dialogContent.padding, const EdgeInsets.all(24));
+    expect(
+      infoContent.padding,
+      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
     expect(
       find.byKey(const ValueKey('sidebar-user-profile-dialog-close')),
       findsOneWidget,
@@ -116,6 +131,8 @@ void main() {
     expect(find.text('退出登录'), findsOneWidget);
     expect(editButton.style?.backgroundColor?.resolve({}), AppColors.brand);
     expect(logoutButton.style?.backgroundColor?.resolve({}), AppColors.error);
+    expect(editButton.style?.minimumSize?.resolve({})?.height, 48);
+    expect(logoutButton.style?.minimumSize?.resolve({})?.height, 48);
 
     await tester.tap(
       find.byKey(const ValueKey('sidebar-user-profile-dialog-close')),

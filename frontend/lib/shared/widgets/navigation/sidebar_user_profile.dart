@@ -50,9 +50,11 @@ class SidebarUserProfile extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 340),
+            key: const ValueKey('sidebar-user-profile-dialog-panel'),
+            constraints: const BoxConstraints(maxWidth: 420),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              key: const ValueKey('sidebar-user-profile-dialog-content'),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,24 +78,27 @@ class SidebarUserProfile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 22),
                   DecoratedBox(
                     decoration: BoxDecoration(
                       color: AppColors.pageBackground,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Padding(
+                      key: const ValueKey(
+                        'sidebar-user-profile-dialog-info-content',
+                      ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+                        horizontal: 16,
+                        vertical: 14,
                       ),
                       child: Column(
                         children: [
                           _DialogInfoRow(label: '账号', value: user.account),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           _DialogInfoRow(label: '组织', value: user.organization),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           _DialogInfoRow(
                             label: '登录',
                             value: user.recentLoginText,
@@ -102,7 +107,7 @@ class SidebarUserProfile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 22),
                   Row(
                     children: [
                       Expanded(
@@ -117,7 +122,7 @@ class SidebarUserProfile extends StatelessWidget {
                           },
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: _DialogSolidButton(
                           key: const ValueKey(
@@ -419,10 +424,10 @@ class _DialogSolidButton extends StatelessWidget {
         backgroundColor: backgroundColor,
         foregroundColor: AppColors.white,
         elevation: 0,
-        minimumSize: const Size(0, 42),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
       ),
       onPressed: onPressed,
       child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
