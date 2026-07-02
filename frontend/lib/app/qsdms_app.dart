@@ -1,0 +1,27 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import 'bindings/initial_binding.dart';
+import 'routes/app_pages.dart';
+import 'routes/app_routes.dart';
+import 'theme/app_theme.dart';
+
+/// QSDMS 桌面端应用入口。
+///
+/// 这里统一挂载 GetX 的路由、依赖注入和主题配置，避免业务页面直接关心
+/// Flutter 根应用的启动细节。
+class QsdmsApp extends StatelessWidget {
+  const QsdmsApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
+      title: 'QSDMS 企业数据管理系统',
+      debugShowCheckedModeBanner: false,
+      initialBinding: InitialBinding(),
+      initialRoute: AppRoutes.home,
+      getPages: AppPages.routes,
+      theme: AppTheme.light,
+    );
+  }
+}
