@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -24,7 +26,7 @@ Future<void> _configureDesktopWindow() async {
     backgroundColor: const Color(0xFFFAFBFC),
     title: 'QSDMS-千树数据管理系统',
     titleBarStyle: TitleBarStyle.hidden,
-    windowButtonVisibility: false,
+    windowButtonVisibility: Platform.isMacOS,
   );
 
   await windowManager.waitUntilReadyToShow(windowOptions, () async {

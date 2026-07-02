@@ -20,6 +20,8 @@ class AppWindowTitleBar extends StatelessWidget {
   });
 
   static const height = 40.0;
+  static const _macosNativeControlsWidth = 78.0;
+
   final AppWindowTitleBarPlatform? platform;
   final String title;
 
@@ -50,101 +52,16 @@ class AppWindowTitleBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (currentPlatform == AppWindowTitleBarPlatform.macos)
-              const _MacosWindowControls(),
+              const SizedBox(
+                key: ValueKey('macos-native-window-controls-space'),
+                width: _macosNativeControlsWidth,
+              ),
             Expanded(
               child: DragToMoveArea(child: _WindowTitleArea(title: title)),
             ),
             if (currentPlatform == AppWindowTitleBarPlatform.windows)
               const _WindowsWindowControls(),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// macOS 左侧窗口控制按钮。
-///
-/// 原生红黄绿按钮在隐藏标题栏后无法通过 Flutter 调整垂直位置，因此这里使用
-/// Flutter 自绘按钮，保证它们稳定居中在自定义窗口栏里。
-class _MacosWindowControls extends StatelessWidget {
-  const _MacosWindowControls();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      key: const ValueKey('macos-window-controls'),
-      height: AppWindowTitleBar.height,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(width: 14),
-          _MacosWindowControlButton(
-            tooltip: '关闭',
-            color: const Color(0xFFFF5F57),
-            borderColor: const Color(0xFFE0443E),
-            onPressed: windowManager.close,
-          ),
-          _MacosWindowControlButton(
-            tooltip: '最小化',
-            color: const Color(0xFFFEBC2E),
-            borderColor: const Color(0xFFD89A1A),
-            onPressed: windowManager.minimize,
-          ),
-          const _MacosWindowControlButton(
-            tooltip: '缩放',
-            color: Color(0xFF28C840),
-            borderColor: Color(0xFF1E9B31),
-            onPressed: _WindowsWindowControls._toggleMaximize,
-          ),
-          const SizedBox(width: 14),
-        ],
-      ),
-    );
-  }
-}
-
-/// macOS 自绘交通灯按钮。
-///
-/// 可点击区域使用完整窗口栏高度，视觉圆点放在 `Center` 中，避免不同平台字体、
-/// 设备像素比或 hover 区域影响垂直对齐。
-class _MacosWindowControlButton extends StatelessWidget {
-  const _MacosWindowControlButton({
-    required this.tooltip,
-    required this.color,
-    required this.borderColor,
-    required this.onPressed,
-  });
-
-  final String tooltip;
-  final Color color;
-  final Color borderColor;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onPressed,
-          child: SizedBox(
-            width: 20,
-            height: AppWindowTitleBar.height,
-            child: Center(
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: borderColor),
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );

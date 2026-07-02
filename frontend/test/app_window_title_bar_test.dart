@@ -19,7 +19,7 @@ void main() {
     expect(find.text('QSDMS-千树数据管理系统'), findsOneWidget);
   });
 
-  testWidgets('macOS 窗口栏左侧显示自定义窗口按钮并垂直居中', (tester) async {
+  testWidgets('macOS 窗口栏左侧预留原生窗口按钮区域', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -28,16 +28,11 @@ void main() {
       ),
     );
 
-    final titleBarRect = tester.getRect(find.byType(AppWindowTitleBar));
-    final controlsRect = tester.getRect(
-      find.byKey(const ValueKey('macos-window-controls')),
+    expect(
+      find.byKey(const ValueKey('macos-native-window-controls-space')),
+      findsOneWidget,
     );
-
-    expect(controlsRect.center.dy, titleBarRect.center.dy);
-    expect(find.byKey(const ValueKey('macos-window-controls')), findsOneWidget);
-    expect(find.byTooltip('关闭'), findsOneWidget);
-    expect(find.byTooltip('最小化'), findsOneWidget);
-    expect(find.byTooltip('缩放'), findsOneWidget);
+    expect(find.byKey(const ValueKey('macos-window-controls')), findsNothing);
     expect(find.byKey(const ValueKey('windows-window-controls')), findsNothing);
   });
 
