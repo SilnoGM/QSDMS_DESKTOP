@@ -59,8 +59,9 @@ void main() {
   });
 
   test('桌面 runner 不保留旧的空标题配置', () {
-    final macWindow = File('macos/Runner/MainFlutterWindow.swift')
-        .readAsStringSync();
+    final macWindow = File(
+      'macos/Runner/MainFlutterWindow.swift',
+    ).readAsStringSync();
     final windowsMain = File('windows/runner/main.cpp').readAsStringSync();
 
     // 窗口标题现在由 window_manager 统一设置，runner 不再保留旧的空标题隐藏逻辑。
@@ -70,8 +71,9 @@ void main() {
   });
 
   test('桌面 runner 默认尺寸与 window_manager 配置保持一致', () {
-    final macXib = File('macos/Runner/Base.lproj/MainMenu.xib')
-        .readAsStringSync();
+    final macXib = File(
+      'macos/Runner/Base.lproj/MainMenu.xib',
+    ).readAsStringSync();
     final windowsMain = File('windows/runner/main.cpp').readAsStringSync();
 
     final macRect = RegExp(

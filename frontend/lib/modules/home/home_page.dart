@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../app/layout/app_shell.dart';
+
 /// QSDMS 桌面端首页。
 ///
-/// 当前按需求清空首页所有可见内容，只保留空白页面骨架，确保路由仍可正常
-/// 挂载，后续需要恢复工作台时再重新放入具体组件。
+/// 首页先接入主框架和侧边栏，内容区仍保持空白骨架。这样可以先验证桌面端
+/// 导航、响应式断点和用户入口，再逐步接入真实业务页面。
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: SizedBox.expand());
+    return const Scaffold(
+      body: AppShell(activeMenuId: 'dashboard', child: SizedBox.expand()),
+    );
   }
 }
