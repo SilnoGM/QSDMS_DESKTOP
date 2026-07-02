@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/physics.dart';
 
 import '../../../app/theme/app_colors.dart';
 import 'sidebar_brand.dart';
@@ -112,39 +112,15 @@ class _SidebarMenuList extends StatelessWidget {
         child: Stack(
           children: [
             if (activeIndex >= 0)
-              // 选中背景只做 transform 位移，避免菜单切换时重新布局整列菜单。
               Positioned(
                 top: QsdmsSidebar.menuVerticalPadding,
                 bottom: QsdmsSidebar.menuVerticalPadding,
                 left: SidebarMenuItem.horizontalPadding,
                 right: SidebarMenuItem.horizontalPadding,
                 child: IgnorePointer(
-                  child: TweenAnimationBuilder<double>(
-                    key: const ValueKey('sidebar-active-menu-indicator-motion'),
-                    tween: Tween<double>(end: _indicatorOffset(activeIndex)),
-                    duration: 320.ms,
-                    curve: Curves.easeOutCubic,
-                    builder: (context, offsetY, child) {
-                      return Transform.translate(
-                        offset: Offset(0, offsetY),
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: SizedBox(
-                      height: SidebarMenuItem.height,
-                      child: DecoratedBox(
-                        key: const ValueKey(
-                          'sidebar-active-menu-indicator-box',
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.brandSelectedBackground,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
+                  child: _SidebarSpringIndicator(
+                    key: const ValueKey('sidebar-active-menu-spring-indicator'),
+                    offsetY: _indicatorOffset(activeIndex),
                   ),
                 ),
               ),
@@ -165,6 +141,103 @@ class _SidebarMenuList extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 侧边栏菜单选中背景。
+///
+/// 这里不用隐式布局动画，而是用弹簧模拟驱动 `Transform.translate`。这样菜单切换时
+/// 背景会有轻微惯性，同时 surface 自身始终保持明确宽高，避免背景被压缩到不可见。
+class _SidebarSpringIndicator extends StatefulWidget {
+  const _SidebarSpringIndicator({required this.offsetY, super.key});
+
+  final double offsetY;
+
+  @override
+  State<_SidebarSpringIndicator> createState() =>
+      _SidebarSpringIndicatorState();
+}
+
+class _SidebarSpringIndicatorState extends State<_SidebarSpringIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  static const _spring = SpringDescription(
+    mass: 1,
+    stiffness: 430,
+    damping: 30,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController.unbounded(
+      vsync: this,
+      value: widget.offsetY,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _SidebarSpringIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.offsetY == widget.offsetY) {
+      return;
+    }
+
+    // 保留当前速度进入下一段弹簧动画，连续快速切换菜单时会更自然。
+    final velocity = _controller.velocity.isFinite ? _controller.velocity : 0.0;
+    _controller.animateWith(
+      SpringSimulation(_spring, _controller.value, widget.offsetY, velocity),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _controller.value),
+          child: Align(alignment: Alignment.topCenter, child: child),
+        );
+      },
+      child: SizedBox(
+        width: double.infinity,
+        height: SidebarMenuItem.height,
+        child: DecoratedBox(
+          key: const ValueKey('sidebar-active-menu-indicator-surface'),
+          decoration: BoxDecoration(
+            color: AppColors.brandSelectedBackground,
+            border: Border.all(color: AppColors.brandSelectedBorder),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: SizedBox(
+                width: 3,
+                height: 22,
+                child: DecoratedBox(
+                  key: const ValueKey('sidebar-active-menu-indicator-accent'),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

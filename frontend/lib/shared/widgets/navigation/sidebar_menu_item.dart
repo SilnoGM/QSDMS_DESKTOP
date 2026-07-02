@@ -133,22 +133,17 @@ class _SidebarMenuItemContent extends StatelessWidget {
             ),
     );
 
-    // 菜单项自身只做轻微缩放和上浮，选中背景滑动由父级侧边栏统一处理。
+    // 菜单项自身只做轻微横向跟随和缩放，选中背景滑动由父级侧边栏统一处理。
     final animatedContent = content
         .animate(
           key: ValueKey('sidebar-menu-motion-${item.id}'),
           target: isActive ? 1 : 0,
         )
+        .moveX(begin: 0, end: 3, duration: 210.ms, curve: Curves.easeOutCubic)
         .scaleXY(
           begin: 1,
-          end: 1.018,
-          duration: 180.ms,
-          curve: Curves.easeOutCubic,
-        )
-        .moveY(
-          begin: 0,
-          end: -0.5,
-          duration: 180.ms,
+          end: 1.012,
+          duration: 210.ms,
           curve: Curves.easeOutCubic,
         );
 

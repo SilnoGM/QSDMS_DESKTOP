@@ -129,18 +129,36 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final activeIndicatorMotion = tester.widget<TweenAnimationBuilder<double>>(
+    expect(
       find.byKey(const ValueKey('sidebar-active-menu-indicator-motion')),
+      findsNothing,
     );
-    final activeIndicatorBox = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('sidebar-active-menu-indicator-box')),
+    expect(
+      find.byKey(const ValueKey('sidebar-active-menu-spring-indicator')),
+      findsOneWidget,
     );
-    final decoration = activeIndicatorBox.decoration as BoxDecoration;
 
-    expect(activeIndicatorMotion.duration, const Duration(milliseconds: 320));
-    expect(activeIndicatorMotion.curve, Curves.easeOutCubic);
-    expect(activeIndicatorMotion.tween.end, SidebarMenuItem.verticalPadding);
-    expect(decoration.color, AppColors.brandSelectedBackground);
+    final activeIndicatorSurface = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-surface')),
+    );
+    final indicatorDecoration =
+        activeIndicatorSurface.decoration as BoxDecoration;
+    final activeIndicatorSize = tester.getSize(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-surface')),
+    );
+    final indicatorAccent = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-accent')),
+    );
+    final accentDecoration = indicatorAccent.decoration as BoxDecoration;
+
+    expect(activeIndicatorSize.width, greaterThanOrEqualTo(200));
+    expect(activeIndicatorSize.height, SidebarMenuItem.height);
+    expect(indicatorDecoration.color, AppColors.brandSelectedBackground);
+    expect(
+      indicatorDecoration.border?.top.color,
+      AppColors.brandSelectedBorder,
+    );
+    expect(accentDecoration.color, AppColors.brand);
     expect(
       find.byKey(const ValueKey('sidebar-menu-motion-dashboard')),
       findsOneWidget,
@@ -178,25 +196,21 @@ void main() {
     await tester.pumpWidget(buildSidebar('dashboard'));
     await tester.pumpAndSettle();
 
-    final initialIndicator = tester.widget<TweenAnimationBuilder<double>>(
-      find.byKey(const ValueKey('sidebar-active-menu-indicator-motion')),
+    final initialTop = tester.getTopLeft(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-surface')),
     );
 
-    expect(initialIndicator.tween.end, SidebarMenuItem.verticalPadding);
-
     await tester.pumpWidget(buildSidebar('settings'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    final movedIndicator = tester.widget<TweenAnimationBuilder<double>>(
-      find.byKey(const ValueKey('sidebar-active-menu-indicator-motion')),
+    final movedTop = tester.getTopLeft(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-surface')),
     );
 
     expect(
-      movedIndicator.tween.end,
-      SidebarMenuItem.verticalPadding + SidebarMenuItem.outerHeight * 2,
+      movedTop.dy - initialTop.dy,
+      closeTo(SidebarMenuItem.outerHeight * 2, 0.01),
     );
-
-    await tester.pumpAndSettle();
   });
 
   testWidgets('菜单项和用户信息区使用点击鼠标指针', (tester) async {
