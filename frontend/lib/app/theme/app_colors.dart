@@ -42,6 +42,11 @@ abstract final class AppColors {
   /// 品牌浅背景：菜单激活态、公告卡片等低强调品牌提示区域。
   static const Color brandSubtle = Color(0xFFE6F4FF);
 
+  /// 菜单选中态背景：品牌蓝 `#1677FF` 的 8% 透明度。
+  ///
+  /// 相比固定浅蓝底，这个颜色更轻、更通透，同时仍然跟随品牌主色。
+  static const Color brandSelectedBackground = Color(0x141677FF);
+
   /// 品牌浅边框：品牌浅背景上的边界线。
   static const Color brandSubtleBorder = Color(0xFFBAE0FF);
 

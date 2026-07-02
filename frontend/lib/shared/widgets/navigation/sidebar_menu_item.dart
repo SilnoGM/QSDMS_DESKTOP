@@ -82,7 +82,9 @@ class _SidebarMenuItemContent extends StatelessWidget {
       alignment: Alignment.center,
       padding: EdgeInsets.symmetric(horizontal: showExpandedContent ? 12 : 0),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.brandSubtle : AppColors.transparent,
+        color: isActive
+            ? AppColors.brandSelectedBackground
+            : AppColors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: showExpandedContent

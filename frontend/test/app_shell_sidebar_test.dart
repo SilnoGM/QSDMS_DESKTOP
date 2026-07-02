@@ -133,7 +133,7 @@ void main() {
     );
     final decoration = dashboardItem.decoration! as BoxDecoration;
 
-    expect(decoration.color, AppColors.brandSubtle);
+    expect(decoration.color, AppColors.brandSelectedBackground);
 
     await tester.tap(find.text('工作台'));
     await tester.pumpAndSettle();

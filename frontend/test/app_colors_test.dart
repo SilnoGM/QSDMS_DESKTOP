@@ -11,6 +11,7 @@ void main() {
     expect(AppColors.error, const Color(0xFFEB5F55));
     expect(AppColors.warning, const Color(0xFFEFAE3B));
     expect(AppColors.link, const Color(0xFF4290F9));
+    expect(AppColors.brandSelectedBackground, const Color(0x141677FF));
   });
 
   test('浅色主题使用品牌色作为主色来源', () {
