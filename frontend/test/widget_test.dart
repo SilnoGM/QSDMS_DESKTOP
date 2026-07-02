@@ -169,4 +169,11 @@ void main() {
     expect(windowsWidth, 1280);
     expect(windowsHeight, 800);
   });
+
+  test('Flutter 静态图片目录已注册到 pubspec', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+
+    expect(pubspec, contains('assets:'));
+    expect(pubspec, contains('- assets/images/'));
+  });
 }

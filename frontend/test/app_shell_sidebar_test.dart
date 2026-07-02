@@ -40,7 +40,10 @@ void main() {
 
     expect(find.byType(AppWindowTitleBar), findsOneWidget);
     expect(sidebar.displayMode, SidebarDisplayMode.collapsed);
+    expect(find.text('Q'), findsOneWidget);
     expect(find.text('QSDMS'), findsNothing);
+    expect(find.text('千树数据平台'), findsNothing);
+    expect(find.byKey(const ValueKey('sidebar-brand-image')), findsNothing);
     expect(find.text('工作台'), findsNothing);
     expect(find.text('基础数据'), findsNothing);
     expect(find.text('系统设置'), findsNothing);
@@ -55,8 +58,14 @@ void main() {
     final sidebar = tester.widget<QsdmsSidebar>(find.byType(QsdmsSidebar));
 
     expect(sidebar.displayMode, SidebarDisplayMode.expanded);
-    expect(find.text('千树数据平台'), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(QsdmsSidebar)).width,
+      QsdmsSidebar.expandedWidth,
+    );
+    expect(find.byKey(const ValueKey('sidebar-brand-image')), findsOneWidget);
+    expect(find.text('千树数据平台'), findsNothing);
     expect(find.text('QSDMS'), findsNothing);
+    expect(find.text('Q'), findsNothing);
     expect(find.text('工作台'), findsOneWidget);
     expect(find.text('基础数据'), findsOneWidget);
     expect(find.text('系统设置'), findsOneWidget);
