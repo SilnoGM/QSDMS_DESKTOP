@@ -60,6 +60,37 @@ void main() {
     expect(find.text('SilnoGM'), findsOneWidget);
   });
 
+  testWidgets('展开状态不显示 Tooltip，折叠状态保留 Tooltip', (tester) async {
+    Widget buildSidebar(SidebarDisplayMode displayMode) {
+      return MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: QsdmsSidebarDefaults.menuItems,
+            activeItemId: 'dashboard',
+            displayMode: displayMode,
+            user: QsdmsSidebarDefaults.user,
+            notice: QsdmsSidebarDefaults.notice,
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildSidebar(SidebarDisplayMode.expanded));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Tooltip), findsNothing);
+    expect(find.byTooltip('工作台'), findsNothing);
+    expect(find.byTooltip('QSDMS-千树数据管理系统'), findsNothing);
+    expect(find.byTooltip('SilnoGM，系统管理员'), findsNothing);
+
+    await tester.pumpWidget(buildSidebar(SidebarDisplayMode.collapsed));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('工作台'), findsOneWidget);
+    expect(find.byTooltip('QSDMS-千树数据管理系统'), findsOneWidget);
+    expect(find.byTooltip('SilnoGM，系统管理员'), findsOneWidget);
+  });
+
   testWidgets('当前菜单由 activeItemId 驱动高亮且重复点击不触发回调', (tester) async {
     var selectedCount = 0;
 

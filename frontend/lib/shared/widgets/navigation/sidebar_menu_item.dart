@@ -31,17 +31,60 @@ class SidebarMenuItem extends StatelessWidget {
         ? item.label
         : '${item.label}，${item.badge!.displayText}';
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canShowExpandedContent =
+            _isExpanded && constraints.maxWidth >= 160;
+
+        return _SidebarMenuItemContent(
+          item: item,
+          isActive: isActive,
+          isEnabled: isEnabled,
+          showExpandedContent: canShowExpandedContent,
+          showTooltip: !_isExpanded,
+          foregroundColor: foregroundColor,
+          tooltipMessage: tooltipMessage,
+          onSelected: onSelected,
+        );
+      },
+    );
+  }
+}
+
+class _SidebarMenuItemContent extends StatelessWidget {
+  const _SidebarMenuItemContent({
+    required this.item,
+    required this.isActive,
+    required this.isEnabled,
+    required this.showExpandedContent,
+    required this.showTooltip,
+    required this.foregroundColor,
+    required this.tooltipMessage,
+    this.onSelected,
+  });
+
+  final SidebarMenuItemConfig item;
+  final bool isActive;
+  final bool isEnabled;
+  final bool showExpandedContent;
+  final bool showTooltip;
+  final Color foregroundColor;
+  final String tooltipMessage;
+  final ValueChanged<SidebarMenuItemConfig>? onSelected;
+
+  @override
+  Widget build(BuildContext context) {
     final content = AnimatedContainer(
       key: ValueKey('sidebar-menu-${item.id}'),
       duration: const Duration(milliseconds: 140),
       height: 46,
       alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: _isExpanded ? 12 : 0),
+      padding: EdgeInsets.symmetric(horizontal: showExpandedContent ? 12 : 0),
       decoration: BoxDecoration(
         color: isActive ? const Color(0xFFEAF2FF) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: _isExpanded
+      child: showExpandedContent
           ? Row(
               children: [
                 Icon(item.icon, size: 21, color: foregroundColor),
@@ -84,20 +127,21 @@ class SidebarMenuItem extends StatelessWidget {
       child: content,
     );
 
+    final semanticItem = Semantics(
+      button: true,
+      selected: isActive,
+      enabled: isEnabled,
+      label: item.disabledReason == null
+          ? item.label
+          : '${item.label}，${item.disabledReason}',
+      child: tappable,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: Tooltip(
-        message: tooltipMessage,
-        child: Semantics(
-          button: true,
-          selected: isActive,
-          enabled: isEnabled,
-          label: item.disabledReason == null
-              ? item.label
-              : '${item.label}，${item.disabledReason}',
-          child: tappable,
-        ),
-      ),
+      child: showTooltip
+          ? Tooltip(message: tooltipMessage, child: semanticItem)
+          : semanticItem,
     );
   }
 }

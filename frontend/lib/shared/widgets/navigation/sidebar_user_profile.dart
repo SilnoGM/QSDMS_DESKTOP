@@ -166,10 +166,16 @@ class _UserProfileContent extends StatelessWidget {
       ),
     );
 
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 10),
-      child: Tooltip(message: '${user.name}，${user.role}', child: profile),
+      child: profile,
     );
+
+    if (isExpanded) {
+      return content;
+    }
+
+    return Tooltip(message: '${user.name}，${user.role}', child: content);
   }
 }
 

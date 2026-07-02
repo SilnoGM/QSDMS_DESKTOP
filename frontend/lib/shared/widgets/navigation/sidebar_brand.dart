@@ -30,6 +30,10 @@ class SidebarBrand extends StatelessWidget {
       ),
     );
 
+    final logoWithOptionalTooltip = _isExpanded
+        ? logo
+        : Tooltip(message: 'QSDMS-千树数据管理系统', child: logo);
+
     return SizedBox(
       height: 64,
       child: Padding(
@@ -39,7 +43,7 @@ class SidebarBrand extends StatelessWidget {
               ? MainAxisAlignment.start
               : MainAxisAlignment.center,
           children: [
-            Tooltip(message: 'QSDMS-千树数据管理系统', child: logo),
+            logoWithOptionalTooltip,
             if (_isExpanded) ...[
               const SizedBox(width: 12),
               const Expanded(
