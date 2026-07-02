@@ -48,4 +48,33 @@ void main() {
     expect(windowsMain, contains('window.Create(L"", origin, size)'));
     expect(windowsMain, isNot(contains('window.Create(L"qsdms_desktop_frontend"')));
   });
+
+  test('桌面 runner 使用较大的 16 比 9 默认窗口尺寸', () {
+    final macXib = File('macos/Runner/Base.lproj/MainMenu.xib')
+        .readAsStringSync();
+    final windowsMain = File('windows/runner/main.cpp').readAsStringSync();
+
+    final macRect = RegExp(
+      r'<rect key="contentRect"[^>]*width="(\d+)" height="(\d+)"',
+    ).firstMatch(macXib);
+    final windowsSize = RegExp(
+      r'Win32Window::Size size\((\d+),\s*(\d+)\);',
+    ).firstMatch(windowsMain);
+
+    expect(macRect, isNotNull);
+    expect(windowsSize, isNotNull);
+
+    final macWidth = int.parse(macRect!.group(1)!);
+    final macHeight = int.parse(macRect.group(2)!);
+    final windowsWidth = int.parse(windowsSize!.group(1)!);
+    final windowsHeight = int.parse(windowsSize.group(2)!);
+
+    // 启动窗口统一使用 1440x810，既保持 16:9，也避免桌面端默认窗口过小。
+    expect(macWidth, 1440);
+    expect(macHeight, 810);
+    expect(macWidth * 9, macHeight * 16);
+    expect(windowsWidth, 1440);
+    expect(windowsHeight, 810);
+    expect(windowsWidth * 9, windowsHeight * 16);
+  });
 }
