@@ -16,7 +16,7 @@ class QsdmsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'QSDMS 企业数据管理系统',
+      title: '',
       debugShowCheckedModeBanner: false,
       initialBinding: InitialBinding(),
       initialRoute: AppRoutes.home,

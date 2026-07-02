@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -25,5 +27,25 @@ void main() {
     await tester.pumpWidget(const QsdmsApp());
 
     expect(Get.isRegistered<HomeController>(), isTrue);
+  });
+
+  testWidgets('Flutter 应用标题不再显示窗口标题文案', (tester) async {
+    await tester.pumpWidget(const QsdmsApp());
+
+    final app = tester.widget<GetMaterialApp>(find.byType(GetMaterialApp));
+
+    expect(app.title, isEmpty);
+  });
+
+  test('桌面 runner 不再写入可见窗口标题', () {
+    final macWindow = File('macos/Runner/MainFlutterWindow.swift')
+        .readAsStringSync();
+    final windowsMain = File('windows/runner/main.cpp').readAsStringSync();
+
+    // 原生桌面窗口标题需要显式置空，避免平台 runner 使用默认应用名展示标题栏文字。
+    expect(macWindow, contains('self.title = ""'));
+    expect(macWindow, contains('self.titleVisibility = .hidden'));
+    expect(windowsMain, contains('window.Create(L"", origin, size)'));
+    expect(windowsMain, isNot(contains('window.Create(L"qsdms_desktop_frontend"')));
   });
 }
