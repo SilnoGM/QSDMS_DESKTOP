@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -5,24 +6,24 @@ import 'package:qsdms_desktop_frontend/app/qsdms_app.dart';
 import 'package:qsdms_desktop_frontend/modules/home/home_controller.dart';
 
 void main() {
-  testWidgets('使用 GetX 启动中文桌面工作台首页', (tester) async {
+  testWidgets('首页路由保持可访问但不显示原有内容', (tester) async {
     await tester.pumpWidget(const QsdmsApp());
 
     expect(find.byType(GetMaterialApp), findsOneWidget);
-    expect(find.text('QSDMS 企业数据管理系统'), findsOneWidget);
-    expect(find.text('订单处理工作台'), findsOneWidget);
-    expect(find.text('订单管理'), findsOneWidget);
-    expect(find.text('供应商管理'), findsOneWidget);
-    expect(find.text('产品资料'), findsOneWidget);
-    expect(find.text('仓储发运'), findsOneWidget);
+    expect(find.byType(Scaffold), findsOneWidget);
+
+    // 首页当前按需求清空，只保留路由和页面骨架，避免旧工作台内容继续露出。
+    expect(find.text('QSDMS 企业数据管理系统'), findsNothing);
+    expect(find.text('订单处理工作台'), findsNothing);
+    expect(find.text('订单管理'), findsNothing);
+    expect(find.text('供应商管理'), findsNothing);
+    expect(find.text('产品资料'), findsNothing);
+    expect(find.text('仓储发运'), findsNothing);
   });
 
-  testWidgets('首页状态由 GetxController 提供', (tester) async {
+  testWidgets('首页依赖仍由 GetX 路由绑定注册', (tester) async {
     await tester.pumpWidget(const QsdmsApp());
 
-    final controller = Get.find<HomeController>();
-
-    expect(controller.workspaceTitle.value, '订单处理工作台');
-    expect(controller.modules.length, 4);
+    expect(Get.isRegistered<HomeController>(), isTrue);
   });
 }
