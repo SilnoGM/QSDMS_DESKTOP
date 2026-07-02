@@ -26,9 +26,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  // 启动默认窗口保持 16:9，并给桌面管理界面预留足够的初始工作区。
-  Win32Window::Size size(1440, 810);
-  if (!window.Create(L"", origin, size)) {
+  // 原生 runner 初始窗口与 window_manager 配置保持一致，避免启动前后尺寸跳变。
+  Win32Window::Size size(1280, 720);
+  if (!window.Create(L"QSDMS-千树数据管理系统", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

@@ -29,27 +29,47 @@ void main() {
     expect(Get.isRegistered<HomeController>(), isTrue);
   });
 
-  testWidgets('Flutter 应用标题不再显示窗口标题文案', (tester) async {
+  testWidgets('Flutter 应用标题同步窗口标题文案', (tester) async {
     await tester.pumpWidget(const QsdmsApp());
 
     final app = tester.widget<GetMaterialApp>(find.byType(GetMaterialApp));
 
-    expect(app.title, isEmpty);
+    expect(app.title, 'QSDMS-千树数据管理系统');
   });
 
-  test('桌面 runner 不再写入可见窗口标题', () {
+  test('应用启动入口通过 window_manager 配置默认窗口', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final mainDart = File('lib/main.dart').readAsStringSync();
+
+    expect(pubspec, contains('window_manager:'));
+    expect(
+      mainDart,
+      contains("import 'package:window_manager/window_manager.dart';"),
+    );
+    expect(mainDart, contains('await windowManager.ensureInitialized();'));
+    expect(mainDart, contains('WindowOptions('));
+    expect(mainDart, contains('size: Size(1280, 720)'));
+    expect(mainDart, contains('minimumSize: Size(1280, 720)'));
+    expect(mainDart, contains('center: true'));
+    expect(mainDart, contains('backgroundColor: Color(0xFFFAFBFC)'));
+    expect(mainDart, contains("title: 'QSDMS-千树数据管理系统'"));
+    expect(mainDart, contains('windowManager.waitUntilReadyToShow'));
+    expect(mainDart, contains('await windowManager.show();'));
+    expect(mainDart, contains('await windowManager.focus();'));
+  });
+
+  test('桌面 runner 不保留旧的空标题配置', () {
     final macWindow = File('macos/Runner/MainFlutterWindow.swift')
         .readAsStringSync();
     final windowsMain = File('windows/runner/main.cpp').readAsStringSync();
 
-    // 原生桌面窗口标题需要显式置空，避免平台 runner 使用默认应用名展示标题栏文字。
-    expect(macWindow, contains('self.title = ""'));
-    expect(macWindow, contains('self.titleVisibility = .hidden'));
-    expect(windowsMain, contains('window.Create(L"", origin, size)'));
-    expect(windowsMain, isNot(contains('window.Create(L"qsdms_desktop_frontend"')));
+    // 窗口标题现在由 window_manager 统一设置，runner 不再保留旧的空标题隐藏逻辑。
+    expect(macWindow, isNot(contains('self.title = ""')));
+    expect(macWindow, isNot(contains('self.titleVisibility = .hidden')));
+    expect(windowsMain, isNot(contains('window.Create(L"", origin, size)')));
   });
 
-  test('桌面 runner 使用较大的 16 比 9 默认窗口尺寸', () {
+  test('桌面 runner 默认尺寸与 window_manager 配置保持一致', () {
     final macXib = File('macos/Runner/Base.lproj/MainMenu.xib')
         .readAsStringSync();
     final windowsMain = File('windows/runner/main.cpp').readAsStringSync();
@@ -69,12 +89,12 @@ void main() {
     final windowsWidth = int.parse(windowsSize!.group(1)!);
     final windowsHeight = int.parse(windowsSize.group(2)!);
 
-    // 启动窗口统一使用 1440x810，既保持 16:9，也避免桌面端默认窗口过小。
-    expect(macWidth, 1440);
-    expect(macHeight, 810);
+    // runner 初始值与 window_manager 配置一致，避免窗口显示前后尺寸跳变。
+    expect(macWidth, 1280);
+    expect(macHeight, 720);
     expect(macWidth * 9, macHeight * 16);
-    expect(windowsWidth, 1440);
-    expect(windowsHeight, 810);
+    expect(windowsWidth, 1280);
+    expect(windowsHeight, 720);
     expect(windowsWidth * 9, windowsHeight * 16);
   });
 }
