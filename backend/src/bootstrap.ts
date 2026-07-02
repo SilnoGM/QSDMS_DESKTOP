@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+import { setupOpenApi } from './openapi';
 
 /// 统一配置 Nest 应用实例。
 ///
@@ -16,13 +17,5 @@ export function configureApp(app: INestApplication): void {
     }),
   );
 
-  const openApiConfig = new DocumentBuilder()
-    .setTitle('QSDMS Backend API')
-    .setDescription('QSDMS 企业数据管理系统后端 API')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, openApiConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  setupOpenApi(app);
 }
