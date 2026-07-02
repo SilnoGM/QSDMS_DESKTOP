@@ -351,7 +351,7 @@ void main() {
     expect(userProfileInkWell.mouseCursor, SystemMouseCursors.click);
   });
 
-  testWidgets('用户弹窗展示账户操作且退出登录触发回调', (tester) async {
+  testWidgets('用户弹窗展示底部操作且按钮暂不触发真实退出', (tester) async {
     var logoutCount = 0;
 
     await tester.pumpWidget(
@@ -373,14 +373,17 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('sidebar-user-profile')));
     await tester.pumpAndSettle();
 
-    expect(find.text('个人信息'), findsOneWidget);
-    expect(find.text('账号设置'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog-close')),
+      findsOneWidget,
+    );
+    expect(find.text('修改个人信息'), findsOneWidget);
     expect(find.text('退出登录'), findsOneWidget);
 
     await tester.tap(find.text('退出登录'));
     await tester.pumpAndSettle();
 
-    expect(logoutCount, 1);
+    expect(logoutCount, 0);
   });
 
   testWidgets('用户区宽度动画中间帧不产生布局溢出', (tester) async {

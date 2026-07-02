@@ -84,16 +84,77 @@ void main() {
     );
   });
 
-  testWidgets('点击用户区仍打开账户操作弹窗', (tester) async {
+  testWidgets('用户弹窗使用白色背景关闭按钮和底部双实心按钮', (tester) async {
     await tester.pumpWidget(buildProfile(SidebarDisplayMode.expanded));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('sidebar-user-profile')));
     await tester.pumpAndSettle();
 
-    expect(find.text('个人信息'), findsOneWidget);
-    expect(find.text('账号设置'), findsOneWidget);
+    final dialogSurface = tester.widget<Dialog>(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog')),
+    );
+    final editButton = tester.widget<ElevatedButton>(
+      find.descendant(
+        of: find.byKey(const ValueKey('sidebar-user-profile-edit-button')),
+        matching: find.byType(ElevatedButton),
+      ),
+    );
+    final logoutButton = tester.widget<ElevatedButton>(
+      find.descendant(
+        of: find.byKey(const ValueKey('sidebar-user-profile-logout-button')),
+        matching: find.byType(ElevatedButton),
+      ),
+    );
+
+    expect(dialogSurface.backgroundColor, AppColors.white);
+    expect(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog-close')),
+      findsOneWidget,
+    );
+    expect(find.text('修改个人信息'), findsOneWidget);
     expect(find.text('退出登录'), findsOneWidget);
+    expect(editButton.style?.backgroundColor?.resolve({}), AppColors.brand);
+    expect(logoutButton.style?.backgroundColor?.resolve({}), AppColors.error);
+
+    await tester.tap(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog-close')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('sidebar-user-profile-dialog')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('用户弹窗底部按钮点击只打印日志', (tester) async {
+    final logs = <String>[];
+    final originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      logs.add(message ?? '');
+    };
+
+    try {
+      await tester.pumpWidget(buildProfile(SidebarDisplayMode.expanded));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('sidebar-user-profile')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('sidebar-user-profile-edit-button')),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('sidebar-user-profile-logout-button')),
+      );
+      await tester.pumpAndSettle();
+    } finally {
+      debugPrint = originalDebugPrint;
+    }
+
+    expect(logs, contains('SidebarUserProfile: 修改个人信息'));
+    expect(logs, contains('SidebarUserProfile: 退出登录'));
   });
 }
 

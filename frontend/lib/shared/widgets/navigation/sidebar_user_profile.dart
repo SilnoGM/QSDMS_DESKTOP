@@ -38,63 +38,104 @@ class SidebarUserProfile extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              _Avatar(user: user),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(user.name),
-                    const SizedBox(height: 2),
-                    Text(
-                      user.role,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
+        return Dialog(
+          key: const ValueKey('sidebar-user-profile-dialog'),
+          backgroundColor: AppColors.white,
+          surfaceTintColor: AppColors.white,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 340),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _Avatar(user: user),
+                      const SizedBox(width: 12),
+                      Expanded(child: _DialogUserTitle(user: user)),
+                      IconButton(
+                        key: const ValueKey(
+                          'sidebar-user-profile-dialog-close',
+                        ),
+                        tooltip: '关闭',
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: AppColors.textTertiary,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.pageBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Column(
+                        children: [
+                          _DialogInfoRow(label: '账号', value: user.account),
+                          const SizedBox(height: 8),
+                          _DialogInfoRow(label: '组织', value: user.organization),
+                          const SizedBox(height: 8),
+                          _DialogInfoRow(
+                            label: '登录',
+                            value: user.recentLoginText,
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('账号：${user.account}'),
-              const SizedBox(height: 6),
-              Text('组织：${user.organization}'),
-              const SizedBox(height: 6),
-              Text(user.recentLoginText),
-              const Divider(height: 24),
-              const _DialogActionLabel(
-                icon: Icons.person_outline,
-                text: '个人信息',
-              ),
-              const SizedBox(height: 10),
-              const _DialogActionLabel(
-                icon: Icons.manage_accounts_outlined,
-                text: '账号设置',
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onLogoutRequested?.call();
-              },
-              child: const Text(
-                '退出登录',
-                style: TextStyle(color: AppColors.error),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DialogSolidButton(
+                          key: const ValueKey(
+                            'sidebar-user-profile-edit-button',
+                          ),
+                          text: '修改个人信息',
+                          backgroundColor: AppColors.brand,
+                          onPressed: () {
+                            debugPrint('SidebarUserProfile: 修改个人信息');
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _DialogSolidButton(
+                          key: const ValueKey(
+                            'sidebar-user-profile-logout-button',
+                          ),
+                          text: '退出登录',
+                          backgroundColor: AppColors.error,
+                          onPressed: () {
+                            debugPrint('SidebarUserProfile: 退出登录');
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -276,20 +317,115 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-class _DialogActionLabel extends StatelessWidget {
-  const _DialogActionLabel({required this.icon, required this.text});
+/// 弹窗顶部用户标题。
+///
+/// 与侧边栏胶囊中的文字层级保持一致，但字号略放大，方便用户确认当前正在
+/// 操作哪个账号。
+class _DialogUserTitle extends StatelessWidget {
+  const _DialogUserTitle({required this.user});
 
-  final IconData icon;
-  final String text;
+  final SidebarUserInfo user;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          user.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          user.role,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
+      ],
+    );
+  }
+}
+
+/// 弹窗账号信息行。
+///
+/// 使用固定宽度标签保证三行内容左边界稳定；值区域使用省略号处理，避免长
+/// 组织名或登录说明撑破弹窗。
+class _DialogInfoRow extends StatelessWidget {
+  const _DialogInfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.textSecondary),
-        const SizedBox(width: 8),
-        Text(text),
+        SizedBox(
+          width: 34,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textTertiary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.textBody,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// 弹窗底部实心按钮。
+///
+/// 两个按钮共享高度、圆角和内边距，只通过颜色和文字区分操作语义。
+class _DialogSolidButton extends StatelessWidget {
+  const _DialogSolidButton({
+    required this.text,
+    required this.backgroundColor,
+    required this.onPressed,
+    super.key,
+  });
+
+  final String text;
+  final Color backgroundColor;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        foregroundColor: AppColors.white,
+        elevation: 0,
+        minimumSize: const Size(0, 42),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+      ),
+      onPressed: onPressed,
+      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }
