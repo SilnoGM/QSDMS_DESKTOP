@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/theme/app_colors.dart';
 import 'sidebar_models.dart';
 
 /// 侧边栏顶部品牌区。
@@ -59,28 +58,22 @@ class _ExpandedBrandImage extends StatelessWidget {
 
 /// 侧边栏折叠态品牌图标。
 ///
-/// 折叠态空间有限，继续保留当前 `Q` 图标，避免图片在窄栏中不可辨认。
+/// 折叠态只展示独立的 `Q.png` 品牌图片，避免影响展开态完整品牌图。
 class _CollapsedBrandLogo extends StatelessWidget {
   const _CollapsedBrandLogo();
 
+  static const assetPath = 'assets/images/Q.png';
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Image.asset(
+      assetPath,
+      key: const ValueKey('sidebar-brand-image'),
       width: 32,
       height: 32,
+      fit: BoxFit.contain,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.brand,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Text(
-        'Q',
-        style: TextStyle(
-          color: AppColors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      semanticLabel: 'QSDMS',
     );
   }
 }

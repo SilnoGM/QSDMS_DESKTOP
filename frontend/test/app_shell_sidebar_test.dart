@@ -43,10 +43,15 @@ void main() {
 
     expect(find.byType(AppWindowTitleBar), findsOneWidget);
     expect(sidebar.displayMode, SidebarDisplayMode.collapsed);
-    expect(find.text('Q'), findsOneWidget);
+    expect(find.text('Q'), findsNothing);
     expect(find.text('QSDMS'), findsNothing);
     expect(find.text('千树数据平台'), findsNothing);
-    expect(find.byKey(const ValueKey('sidebar-brand-image')), findsNothing);
+    expect(find.byKey(const ValueKey('sidebar-brand-image')), findsOneWidget);
+    final brandImage = tester.widget<Image>(
+      find.byKey(const ValueKey('sidebar-brand-image')),
+    );
+    final brandImageProvider = brandImage.image as AssetImage;
+    expect(brandImageProvider.assetName, 'assets/images/Q.png');
     expect(find.text('工作台'), findsNothing);
     expect(find.text('基础数据'), findsNothing);
     expect(find.text('系统设置'), findsNothing);
