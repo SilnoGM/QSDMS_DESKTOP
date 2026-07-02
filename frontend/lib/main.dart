@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -17,12 +19,14 @@ void main() async {
 Future<void> _configureDesktopWindow() async {
   await windowManager.ensureInitialized();
 
-  const windowOptions = WindowOptions(
-    size: Size(1280, 800),
-    minimumSize: Size(1280, 800),
+  final windowOptions = WindowOptions(
+    size: const Size(1280, 800),
+    minimumSize: const Size(1280, 800),
     center: true,
-    backgroundColor: Color(0xFFFAFBFC),
+    backgroundColor: const Color(0xFFFAFBFC),
     title: 'QSDMS-千树数据管理系统',
+    titleBarStyle: TitleBarStyle.hidden,
+    windowButtonVisibility: Platform.isMacOS,
   );
 
   await windowManager.waitUntilReadyToShow(windowOptions, () async {

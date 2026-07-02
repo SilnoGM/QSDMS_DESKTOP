@@ -79,11 +79,13 @@ void main() {
     );
     expect(mainDart, contains('await windowManager.ensureInitialized();'));
     expect(mainDart, contains('WindowOptions('));
-    expect(mainDart, contains('size: Size(1280, 800)'));
-    expect(mainDart, contains('minimumSize: Size(1280, 800)'));
+    expect(mainDart, contains('size: const Size(1280, 800)'));
+    expect(mainDart, contains('minimumSize: const Size(1280, 800)'));
     expect(mainDart, contains('center: true'));
-    expect(mainDart, contains('backgroundColor: Color(0xFFFAFBFC)'));
+    expect(mainDart, contains('backgroundColor: const Color(0xFFFAFBFC)'));
     expect(mainDart, contains("title: 'QSDMS-千树数据管理系统'"));
+    expect(mainDart, contains('titleBarStyle: TitleBarStyle.hidden'));
+    expect(mainDart, contains('windowButtonVisibility: Platform.isMacOS'));
     expect(mainDart, contains('windowManager.waitUntilReadyToShow'));
     expect(mainDart, contains('await windowManager.show();'));
     expect(mainDart, contains('await windowManager.focus();'));

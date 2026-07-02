@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../shared/widgets/navigation/qsdms_sidebar.dart';
 import '../../shared/widgets/navigation/sidebar_models.dart';
+import '../../shared/widgets/window/app_window_title_bar.dart';
 import 'app_breakpoints.dart';
 import 'app_layout_mode.dart';
 
@@ -45,22 +46,29 @@ class AppShell extends StatelessWidget {
             ? SidebarDisplayMode.collapsed
             : SidebarDisplayMode.expanded;
 
-        return Row(
+        return Column(
           children: [
-            QsdmsSidebar(
-              items: QsdmsSidebarDefaults.menuItems,
-              activeItemId: activeMenuId,
-              displayMode: sidebarMode,
-              user: QsdmsSidebarDefaults.user,
-              notice: QsdmsSidebarDefaults.notice,
-              onMenuSelected: _handleMenuSelected,
-              onLogoutRequested: onLogoutRequested,
-              onNoticeTap: onNoticeTap,
-            ),
+            const AppWindowTitleBar(),
             Expanded(
-              child: DecoratedBox(
-                decoration: const BoxDecoration(color: Color(0xFFF6F8FA)),
-                child: child,
+              child: Row(
+                children: [
+                  QsdmsSidebar(
+                    items: QsdmsSidebarDefaults.menuItems,
+                    activeItemId: activeMenuId,
+                    displayMode: sidebarMode,
+                    user: QsdmsSidebarDefaults.user,
+                    notice: QsdmsSidebarDefaults.notice,
+                    onMenuSelected: _handleMenuSelected,
+                    onLogoutRequested: onLogoutRequested,
+                    onNoticeTap: onNoticeTap,
+                  ),
+                  Expanded(
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(color: Color(0xFFF6F8FA)),
+                      child: child,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

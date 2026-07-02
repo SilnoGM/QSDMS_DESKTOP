@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:qsdms_desktop_frontend/app/layout/app_shell.dart';
-import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_models.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/qsdms_sidebar.dart';
+import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_models.dart';
+import 'package:qsdms_desktop_frontend/shared/widgets/window/app_window_title_bar.dart';
 
 void main() {
   const compactSize = Size(1280, 800);
@@ -36,6 +37,7 @@ void main() {
 
     final sidebar = tester.widget<QsdmsSidebar>(find.byType(QsdmsSidebar));
 
+    expect(find.byType(AppWindowTitleBar), findsOneWidget);
     expect(sidebar.displayMode, SidebarDisplayMode.collapsed);
     expect(find.text('QSDMS'), findsNothing);
     expect(find.text('工作台'), findsNothing);
