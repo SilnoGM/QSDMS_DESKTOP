@@ -42,7 +42,7 @@ class SidebarBrand extends StatelessWidget {
 class _ExpandedBrandImage extends StatelessWidget {
   const _ExpandedBrandImage();
 
-  static const assetPath = 'assets/images/QSDMS.png';
+  static const assetPath = 'assets/images/QIANSHUDMS.png';
 
   @override
   Widget build(BuildContext context) {

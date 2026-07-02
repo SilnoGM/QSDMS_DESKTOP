@@ -63,6 +63,11 @@ void main() {
       QsdmsSidebar.expandedWidth,
     );
     expect(find.byKey(const ValueKey('sidebar-brand-image')), findsOneWidget);
+    final brandImage = tester.widget<Image>(
+      find.byKey(const ValueKey('sidebar-brand-image')),
+    );
+    final brandImageProvider = brandImage.image as AssetImage;
+    expect(brandImageProvider.assetName, 'assets/images/QIANSHUDMS.png');
     expect(find.text('千树数据平台'), findsNothing);
     expect(find.text('QSDMS'), findsNothing);
     expect(find.text('Q'), findsNothing);
