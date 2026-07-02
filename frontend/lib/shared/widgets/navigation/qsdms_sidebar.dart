@@ -167,8 +167,8 @@ class _SidebarSpringIndicatorState extends State<_SidebarSpringIndicator>
 
   static const _spring = SpringDescription(
     mass: 1,
-    stiffness: 520,
-    damping: 25,
+    stiffness: 360,
+    damping: 32,
   );
 
   @override

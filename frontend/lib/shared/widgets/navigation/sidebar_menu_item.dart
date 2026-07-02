@@ -136,7 +136,7 @@ class _SidebarMenuItemContent extends StatelessWidget {
             ),
     );
 
-    // 菜单项自身负责消费级的轻微 pop 和横向跟随，选中胶囊由父级侧边栏统一处理。
+    // 菜单项自身只做轻量跟随，主过渡交给父级胶囊，避免文字和图标过度抢动效。
     final animatedContent = content
         .animate(
           key: ValueKey('sidebar-menu-motion-${item.id}'),
@@ -144,15 +144,15 @@ class _SidebarMenuItemContent extends StatelessWidget {
         )
         .moveX(
           begin: 0,
-          end: showExpandedContent ? 4 : 0,
-          duration: 230.ms,
-          curve: Curves.easeOutBack,
+          end: showExpandedContent ? 2 : 0,
+          duration: 260.ms,
+          curve: Curves.easeOutCubic,
         )
         .scaleXY(
           begin: 1,
-          end: 1.035,
-          duration: 230.ms,
-          curve: Curves.easeOutBack,
+          end: 1.018,
+          duration: 260.ms,
+          curve: Curves.easeOutCubic,
         );
 
     final tappable = InkWell(

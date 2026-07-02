@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -262,6 +264,23 @@ void main() {
       AppColors.brandSelectedGradientStart,
       AppColors.brandSelectedGradientEnd,
     ]);
+  });
+
+  test('菜单消费级动效使用更自然的过渡参数', () {
+    final sidebarSource = File(
+      'lib/shared/widgets/navigation/qsdms_sidebar.dart',
+    ).readAsStringSync();
+    final menuItemSource = File(
+      'lib/shared/widgets/navigation/sidebar_menu_item.dart',
+    ).readAsStringSync();
+
+    expect(sidebarSource, contains('stiffness: 360'));
+    expect(sidebarSource, contains('damping: 32'));
+    expect(menuItemSource, contains('end: showExpandedContent ? 2 : 0'));
+    expect(menuItemSource, contains('end: 1.018'));
+    expect(menuItemSource, contains('duration: 260.ms'));
+    expect(menuItemSource, contains('curve: Curves.easeOutCubic'));
+    expect(menuItemSource, isNot(contains('Curves.easeOutBack')));
   });
 
   testWidgets('菜单项和用户信息区使用点击鼠标指针', (tester) async {
