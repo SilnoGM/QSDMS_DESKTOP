@@ -27,7 +27,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   // 原生 runner 初始窗口与 window_manager 配置保持一致，避免启动前后尺寸跳变。
-  Win32Window::Size size(1280, 720);
+  Win32Window::Size size(1280, 800);
   if (!window.Create(L"QSDMS-千树数据管理系统", origin, size)) {
     return EXIT_FAILURE;
   }

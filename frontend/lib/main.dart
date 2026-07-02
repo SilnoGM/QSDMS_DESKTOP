@@ -18,8 +18,8 @@ Future<void> _configureDesktopWindow() async {
   await windowManager.ensureInitialized();
 
   const windowOptions = WindowOptions(
-    size: Size(1280, 720),
-    minimumSize: Size(1280, 720),
+    size: Size(1280, 800),
+    minimumSize: Size(1280, 800),
     center: true,
     backgroundColor: Color(0xFFFAFBFC),
     title: 'QSDMS-千树数据管理系统',

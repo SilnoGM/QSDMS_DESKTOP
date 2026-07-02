@@ -48,8 +48,8 @@ void main() {
     );
     expect(mainDart, contains('await windowManager.ensureInitialized();'));
     expect(mainDart, contains('WindowOptions('));
-    expect(mainDart, contains('size: Size(1280, 720)'));
-    expect(mainDart, contains('minimumSize: Size(1280, 720)'));
+    expect(mainDart, contains('size: Size(1280, 800)'));
+    expect(mainDart, contains('minimumSize: Size(1280, 800)'));
     expect(mainDart, contains('center: true'));
     expect(mainDart, contains('backgroundColor: Color(0xFFFAFBFC)'));
     expect(mainDart, contains("title: 'QSDMS-千树数据管理系统'"));
@@ -91,10 +91,8 @@ void main() {
 
     // runner 初始值与 window_manager 配置一致，避免窗口显示前后尺寸跳变。
     expect(macWidth, 1280);
-    expect(macHeight, 720);
-    expect(macWidth * 9, macHeight * 16);
+    expect(macHeight, 800);
     expect(windowsWidth, 1280);
-    expect(windowsHeight, 720);
-    expect(windowsWidth * 9, windowsHeight * 16);
+    expect(windowsHeight, 800);
   });
 }
