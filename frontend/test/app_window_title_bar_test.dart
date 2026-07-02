@@ -14,9 +14,13 @@ void main() {
     );
 
     final titleBarSize = tester.getSize(find.byType(AppWindowTitleBar));
+    final titleBar = tester.widget<AppWindowTitleBar>(
+      find.byType(AppWindowTitleBar),
+    );
 
     expect(titleBarSize.height, AppWindowTitleBar.height);
-    expect(find.text('QSDMS-千树数据管理系统'), findsNothing);
+    expect(titleBar.title, '千树DMS');
+    expect(find.text('千树DMS'), findsNothing);
   });
 
   testWidgets('macOS 窗口栏左侧预留原生窗口按钮区域', (tester) async {

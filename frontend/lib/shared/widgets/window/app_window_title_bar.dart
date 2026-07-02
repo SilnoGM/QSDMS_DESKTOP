@@ -15,11 +15,7 @@ enum AppWindowTitleBarPlatform { macos, windows, other }
 /// 原生标题栏隐藏后，窗口拖拽和 Windows 窗口按钮由这个组件承接。
 /// macOS 仍保留系统红黄绿按钮，所以只在左侧预留不可点击布局空间。
 class AppWindowTitleBar extends StatelessWidget {
-  const AppWindowTitleBar({
-    this.platform,
-    this.title = 'QSDMS-千树数据管理系统',
-    super.key,
-  });
+  const AppWindowTitleBar({this.platform, this.title = '千树DMS', super.key});
 
   static const height = 40.0;
   static const _macosNativeControlsWidth = 78.0;

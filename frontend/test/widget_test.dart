@@ -97,7 +97,7 @@ void main() {
 
     final app = tester.widget<GetMaterialApp>(find.byType(GetMaterialApp));
 
-    expect(app.title, 'QSDMS-千树数据管理系统');
+    expect(app.title, '千树DMS');
   });
 
   testWidgets('桌面端路由切换不使用页面滑入动画', (tester) async {
@@ -125,7 +125,7 @@ void main() {
     expect(mainDart, contains('minimumSize: const Size(1280, 800)'));
     expect(mainDart, contains('center: true'));
     expect(mainDart, contains('backgroundColor: AppColors.windowBackground'));
-    expect(mainDart, contains("title: 'QSDMS-千树数据管理系统'"));
+    expect(mainDart, contains("title: '千树DMS'"));
     expect(mainDart, contains('titleBarStyle: TitleBarStyle.hidden'));
     expect(mainDart, contains('windowButtonVisibility: Platform.isMacOS'));
     expect(mainDart, contains('windowManager.waitUntilReadyToShow'));
@@ -143,6 +143,39 @@ void main() {
     expect(macWindow, isNot(contains('self.title = ""')));
     expect(macWindow, isNot(contains('self.titleVisibility = .hidden')));
     expect(windowsMain, isNot(contains('window.Create(L"", origin, size)')));
+  });
+
+  test('桌面端原生显示名统一配置为千树DMS', () {
+    final macAppInfo = File(
+      'macos/Runner/Configs/AppInfo.xcconfig',
+    ).readAsStringSync();
+    final macProject = File(
+      'macos/Runner.xcodeproj/project.pbxproj',
+    ).readAsStringSync();
+    final macScheme = File(
+      'macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme',
+    ).readAsStringSync();
+    final windowsMain = File('windows/runner/main.cpp').readAsStringSync();
+    final windowsCMake = File('windows/CMakeLists.txt').readAsStringSync();
+    final windowsResources = File(
+      'windows/runner/Runner.rc',
+    ).readAsStringSync();
+
+    expect(macAppInfo, contains('PRODUCT_NAME = 千树DMS'));
+    expect(macProject, contains('千树DMS.app'));
+    expect(macScheme, contains('BuildableName = "千树DMS.app"'));
+    expect(windowsMain, contains('window.Create(L"千树DMS", origin, size)'));
+    expect(windowsCMake, contains('project(qianshu_dms LANGUAGES CXX)'));
+    expect(windowsCMake, contains('set(BINARY_NAME "qianshu_dms")'));
+    expect(
+      windowsResources,
+      contains('VALUE "FileDescription", "千树DMS" "\\0"'),
+    );
+    expect(windowsResources, contains('VALUE "ProductName", "千树DMS" "\\0"'));
+    expect(
+      windowsResources,
+      contains('VALUE "OriginalFilename", "qianshu_dms.exe" "\\0"'),
+    );
   });
 
   test('macOS runner 对原生窗口按钮做垂直居中校正', () {

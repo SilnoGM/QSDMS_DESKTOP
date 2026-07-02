@@ -25,7 +25,7 @@ Future<void> _configureDesktopWindow() async {
     minimumSize: const Size(1280, 800),
     center: true,
     backgroundColor: AppColors.windowBackground,
-    title: 'QSDMS-千树数据管理系统',
+    title: '千树DMS',
     titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: Platform.isMacOS,
   );

@@ -1,10 +1,10 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(qsdms_desktop_frontend LANGUAGES CXX)
+project(qianshu_dms LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "qsdms_desktop_frontend")
+set(BINARY_NAME "qianshu_dms")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

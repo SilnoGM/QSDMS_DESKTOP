@@ -110,14 +110,14 @@ void main() {
 
     expect(find.byType(Tooltip), findsNothing);
     expect(find.byTooltip('工作台'), findsNothing);
-    expect(find.byTooltip('QSDMS-千树数据管理系统'), findsNothing);
+    expect(find.byTooltip('千树DMS'), findsNothing);
     expect(find.byTooltip('SilnoGM，系统管理员'), findsNothing);
 
     await tester.pumpWidget(buildSidebar(SidebarDisplayMode.collapsed));
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('工作台'), findsOneWidget);
-    expect(find.byTooltip('QSDMS-千树数据管理系统'), findsOneWidget);
+    expect(find.byTooltip('千树DMS'), findsOneWidget);
     expect(find.byTooltip('SilnoGM，系统管理员'), findsOneWidget);
   });
 

@@ -23,10 +23,7 @@ class SidebarBrand extends StatelessWidget {
           children: [
             _isExpanded
                 ? const Expanded(child: _ExpandedBrandImage())
-                : const Tooltip(
-                    message: 'QSDMS-千树数据管理系统',
-                    child: _CollapsedBrandLogo(),
-                  ),
+                : const Tooltip(message: '千树DMS', child: _CollapsedBrandLogo()),
           ],
         ),
       ),
