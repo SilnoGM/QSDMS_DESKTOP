@@ -22,6 +22,9 @@ class QsdmsApp extends StatelessWidget {
       initialRoute: AppRoutes.home,
       getPages: AppPages.routes,
       theme: AppTheme.light,
+      // 桌面端侧边栏切换属于主框架内部导航，不应让整页参与滑入动画。
+      defaultTransition: Transition.noTransition,
+      transitionDuration: Duration.zero,
     );
   }
 }

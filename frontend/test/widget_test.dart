@@ -59,6 +59,15 @@ void main() {
     expect(app.title, 'QSDMS-千树数据管理系统');
   });
 
+  testWidgets('桌面端路由切换不使用页面滑入动画', (tester) async {
+    await tester.pumpWidget(const QsdmsApp());
+
+    final app = tester.widget<GetMaterialApp>(find.byType(GetMaterialApp));
+
+    expect(app.defaultTransition, Transition.noTransition);
+    expect(app.transitionDuration, Duration.zero);
+  });
+
   test('应用启动入口通过 window_manager 配置默认窗口', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     final mainDart = File('lib/main.dart').readAsStringSync();
