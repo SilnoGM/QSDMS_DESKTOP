@@ -52,8 +52,9 @@ class MainFlutterWindow: NSWindow {
       return
     }
 
-    let buttonY = (customTitleBarHeight - closeButton.frame.height) / 2
-    let centeredY = max(0, buttonY)
+    let titleBarBottomY = max(0, titleBarView.bounds.height - customTitleBarHeight)
+    let buttonOffsetY = max(0, (customTitleBarHeight - closeButton.frame.height) / 2)
+    let centeredY = titleBarBottomY + buttonOffsetY
 
     closeButton.setFrameOrigin(NSPoint(x: closeButton.frame.origin.x, y: centeredY))
     minimizeButton.setFrameOrigin(NSPoint(x: minimizeButton.frame.origin.x, y: centeredY))

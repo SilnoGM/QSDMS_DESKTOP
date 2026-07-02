@@ -113,6 +113,11 @@ void main() {
     expect(macWindow, contains('standardWindowButton(.closeButton)'));
     expect(macWindow, contains('standardWindowButton(.miniaturizeButton)'));
     expect(macWindow, contains('standardWindowButton(.zoomButton)'));
+    expect(macWindow, contains('titleBarView.bounds.height'));
+    expect(
+      macWindow,
+      contains('titleBarView.bounds.height - customTitleBarHeight'),
+    );
     expect(macWindow, contains('setFrameOrigin'));
     expect(macWindow, contains('NSWindow.didResizeNotification'));
     expect(macWindow, contains('DispatchQueue.main.async'));
