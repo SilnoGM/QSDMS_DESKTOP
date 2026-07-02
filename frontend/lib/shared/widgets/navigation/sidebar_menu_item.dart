@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../app/theme/app_colors.dart';
 import 'sidebar_models.dart';
@@ -132,19 +133,32 @@ class _SidebarMenuItemContent extends StatelessWidget {
             ),
     );
 
+    // 菜单项自身只做轻微缩放和上浮，选中背景滑动由父级侧边栏统一处理。
+    final animatedContent = content
+        .animate(
+          key: ValueKey('sidebar-menu-motion-${item.id}'),
+          target: isActive ? 1 : 0,
+        )
+        .scaleXY(
+          begin: 1,
+          end: 1.018,
+          duration: 180.ms,
+          curve: Curves.easeOutCubic,
+        )
+        .moveY(
+          begin: 0,
+          end: -0.5,
+          duration: 180.ms,
+          curve: Curves.easeOutCubic,
+        );
+
     final tappable = InkWell(
       borderRadius: BorderRadius.circular(8),
       mouseCursor: isEnabled
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
       onTap: isEnabled && !isActive ? () => onSelected?.call(item) : null,
-      child: AnimatedScale(
-        key: ValueKey('sidebar-menu-scale-${item.id}'),
-        scale: isActive ? 1.02 : 1.0,
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOutCubic,
-        child: content,
-      ),
+      child: animatedContent,
     );
 
     final semanticItem = Semantics(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../app/theme/app_colors.dart';
 import 'sidebar_brand.dart';
@@ -96,9 +97,8 @@ class _SidebarMenuList extends StatelessWidget {
         SidebarMenuItem.outerHeight * items.length;
   }
 
-  double _indicatorTop(int activeIndex) {
-    return QsdmsSidebar.menuVerticalPadding +
-        SidebarMenuItem.verticalPadding +
+  double _indicatorOffset(int activeIndex) {
+    return SidebarMenuItem.verticalPadding +
         SidebarMenuItem.outerHeight * activeIndex;
   }
 
@@ -112,19 +112,39 @@ class _SidebarMenuList extends StatelessWidget {
         child: Stack(
           children: [
             if (activeIndex >= 0)
-              AnimatedPositioned(
-                key: const ValueKey('sidebar-active-menu-indicator'),
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutBack,
-                top: _indicatorTop(activeIndex),
+              // 选中背景只做 transform 位移，避免菜单切换时重新布局整列菜单。
+              Positioned(
+                top: QsdmsSidebar.menuVerticalPadding,
+                bottom: QsdmsSidebar.menuVerticalPadding,
                 left: SidebarMenuItem.horizontalPadding,
                 right: SidebarMenuItem.horizontalPadding,
-                height: SidebarMenuItem.height,
-                child: DecoratedBox(
-                  key: const ValueKey('sidebar-active-menu-indicator-box'),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandSelectedBackground,
-                    borderRadius: BorderRadius.circular(8),
+                child: IgnorePointer(
+                  child: TweenAnimationBuilder<double>(
+                    key: const ValueKey('sidebar-active-menu-indicator-motion'),
+                    tween: Tween<double>(end: _indicatorOffset(activeIndex)),
+                    duration: 320.ms,
+                    curve: Curves.easeOutCubic,
+                    builder: (context, offsetY, child) {
+                      return Transform.translate(
+                        offset: Offset(0, offsetY),
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: SizedBox(
+                      height: SidebarMenuItem.height,
+                      child: DecoratedBox(
+                        key: const ValueKey(
+                          'sidebar-active-menu-indicator-box',
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.brandSelectedBackground,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

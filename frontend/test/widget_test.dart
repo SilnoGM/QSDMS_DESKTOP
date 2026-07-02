@@ -8,8 +8,13 @@ import 'package:qsdms_desktop_frontend/app/qsdms_app.dart';
 import 'package:qsdms_desktop_frontend/modules/home/home_controller.dart';
 
 void main() {
-  testWidgets('首页路由展示工作台页面标记', (tester) async {
+  Future<void> pumpApp(WidgetTester tester) async {
     await tester.pumpWidget(const QsdmsApp());
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('首页路由展示工作台页面标记', (tester) async {
+    await pumpApp(tester);
 
     expect(find.byType(GetMaterialApp), findsOneWidget);
     expect(find.byType(Scaffold), findsOneWidget);
@@ -23,8 +28,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
 
-    await tester.pumpWidget(const QsdmsApp());
-    await tester.pumpAndSettle();
+    await pumpApp(tester);
 
     await tester.tap(find.text('基础数据'));
     await tester.pumpAndSettle();
@@ -46,13 +50,13 @@ void main() {
   });
 
   testWidgets('首页依赖仍由 GetX 路由绑定注册', (tester) async {
-    await tester.pumpWidget(const QsdmsApp());
+    await pumpApp(tester);
 
     expect(Get.isRegistered<HomeController>(), isTrue);
   });
 
   testWidgets('Flutter 应用标题同步窗口标题文案', (tester) async {
-    await tester.pumpWidget(const QsdmsApp());
+    await pumpApp(tester);
 
     final app = tester.widget<GetMaterialApp>(find.byType(GetMaterialApp));
 
@@ -60,7 +64,7 @@ void main() {
   });
 
   testWidgets('桌面端路由切换不使用页面滑入动画', (tester) async {
-    await tester.pumpWidget(const QsdmsApp());
+    await pumpApp(tester);
 
     final app = tester.widget<GetMaterialApp>(find.byType(GetMaterialApp));
 
@@ -175,5 +179,11 @@ void main() {
 
     expect(pubspec, contains('assets:'));
     expect(pubspec, contains('- assets/images/'));
+  });
+
+  test('菜单动效依赖 Flutter Animate', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+
+    expect(pubspec, contains('flutter_animate:'));
   });
 }

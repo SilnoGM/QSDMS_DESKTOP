@@ -129,33 +129,30 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final activeIndicator = tester.widget<AnimatedPositioned>(
-      find.byKey(const ValueKey('sidebar-active-menu-indicator')),
+    final activeIndicatorMotion = tester.widget<TweenAnimationBuilder<double>>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-motion')),
     );
     final activeIndicatorBox = tester.widget<DecoratedBox>(
       find.byKey(const ValueKey('sidebar-active-menu-indicator-box')),
     );
     final decoration = activeIndicatorBox.decoration as BoxDecoration;
 
-    expect(activeIndicator.duration, const Duration(milliseconds: 260));
-    expect(activeIndicator.curve, Curves.easeOutBack);
-    expect(
-      activeIndicator.top,
-      QsdmsSidebar.menuVerticalPadding + SidebarMenuItem.verticalPadding,
-    );
-    expect(activeIndicator.height, SidebarMenuItem.height);
+    expect(activeIndicatorMotion.duration, const Duration(milliseconds: 320));
+    expect(activeIndicatorMotion.curve, Curves.easeOutCubic);
+    expect(activeIndicatorMotion.tween.end, SidebarMenuItem.verticalPadding);
     expect(decoration.color, AppColors.brandSelectedBackground);
-    final activeScale = tester.widget<AnimatedScale>(
+    expect(
+      find.byKey(const ValueKey('sidebar-menu-motion-dashboard')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('sidebar-menu-motion-baseData')),
+      findsOneWidget,
+    );
+    expect(
       find.byKey(const ValueKey('sidebar-menu-scale-dashboard')),
+      findsNothing,
     );
-    final inactiveScale = tester.widget<AnimatedScale>(
-      find.byKey(const ValueKey('sidebar-menu-scale-baseData')),
-    );
-
-    expect(activeScale.scale, 1.02);
-    expect(activeScale.duration, const Duration(milliseconds: 160));
-    expect(activeScale.curve, Curves.easeOutCubic);
-    expect(inactiveScale.scale, 1.0);
 
     await tester.tap(find.text('工作台'));
     await tester.pumpAndSettle();
@@ -181,28 +178,25 @@ void main() {
     await tester.pumpWidget(buildSidebar('dashboard'));
     await tester.pumpAndSettle();
 
-    final initialIndicator = tester.widget<AnimatedPositioned>(
-      find.byKey(const ValueKey('sidebar-active-menu-indicator')),
+    final initialIndicator = tester.widget<TweenAnimationBuilder<double>>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-motion')),
     );
 
-    expect(
-      initialIndicator.top,
-      QsdmsSidebar.menuVerticalPadding + SidebarMenuItem.verticalPadding,
-    );
+    expect(initialIndicator.tween.end, SidebarMenuItem.verticalPadding);
 
     await tester.pumpWidget(buildSidebar('settings'));
     await tester.pump();
 
-    final movedIndicator = tester.widget<AnimatedPositioned>(
-      find.byKey(const ValueKey('sidebar-active-menu-indicator')),
+    final movedIndicator = tester.widget<TweenAnimationBuilder<double>>(
+      find.byKey(const ValueKey('sidebar-active-menu-indicator-motion')),
     );
 
     expect(
-      movedIndicator.top,
-      QsdmsSidebar.menuVerticalPadding +
-          SidebarMenuItem.verticalPadding +
-          SidebarMenuItem.outerHeight * 2,
+      movedIndicator.tween.end,
+      SidebarMenuItem.verticalPadding + SidebarMenuItem.outerHeight * 2,
     );
+
+    await tester.pumpAndSettle();
   });
 
   testWidgets('菜单项和用户信息区使用点击鼠标指针', (tester) async {
@@ -319,6 +313,8 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull);
+
+    await tester.pumpAndSettle();
   });
 
   testWidgets('公告卡片展开可见并触发回调，折叠状态隐藏', (tester) async {
