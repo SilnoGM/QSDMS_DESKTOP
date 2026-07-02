@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/window/app_window_title_bar.dart';
 
 void main() {
-  testWidgets('窗口栏使用固定高度并显示应用标题', (tester) async {
+  testWidgets('窗口栏使用固定高度并隐藏应用标题', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -16,7 +16,7 @@ void main() {
     final titleBarSize = tester.getSize(find.byType(AppWindowTitleBar));
 
     expect(titleBarSize.height, AppWindowTitleBar.height);
-    expect(find.text('QSDMS-千树数据管理系统'), findsOneWidget);
+    expect(find.text('QSDMS-千树数据管理系统'), findsNothing);
   });
 
   testWidgets('macOS 窗口栏左侧预留原生窗口按钮区域', (tester) async {

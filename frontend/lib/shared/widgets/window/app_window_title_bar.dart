@@ -10,7 +10,7 @@ enum AppWindowTitleBarPlatform { macos, windows, other }
 
 /// QSDMS 桌面端自定义窗口栏。
 ///
-/// 原生标题栏隐藏后，窗口拖拽、标题展示和 Windows 窗口按钮由这个组件承接。
+/// 原生标题栏隐藏后，窗口拖拽和 Windows 窗口按钮由这个组件承接。
 /// macOS 仍保留系统红黄绿按钮，所以只在左侧预留不可点击布局空间。
 class AppWindowTitleBar extends StatelessWidget {
   const AppWindowTitleBar({
@@ -68,9 +68,10 @@ class AppWindowTitleBar extends StatelessWidget {
   }
 }
 
-/// 窗口栏标题展示区。
+/// 窗口栏空白拖拽区。
 ///
-/// 该区域同时作为拖拽区域，内部不放按钮或输入控件，避免和窗口拖拽手势冲突。
+/// 标题不再可见展示，但保留语义标签，方便后续需要辅助功能或恢复显示时
+/// 继续复用 `title` 配置。
 class _WindowTitleArea extends StatelessWidget {
   const _WindowTitleArea({required this.title});
 
@@ -78,22 +79,7 @@ class _WindowTitleArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Color(0xFF344054),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
+    return Semantics(label: title, child: const SizedBox.expand());
   }
 }
 
