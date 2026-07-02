@@ -103,6 +103,21 @@ void main() {
     expect(windowsMain, isNot(contains('window.Create(L"", origin, size)')));
   });
 
+  test('macOS runner 对原生窗口按钮做垂直居中校正', () {
+    final macWindow = File(
+      'macos/Runner/MainFlutterWindow.swift',
+    ).readAsStringSync();
+
+    expect(macWindow, contains('customTitleBarHeight: CGFloat = 40'));
+    expect(macWindow, contains('centerTrafficLightButtons()'));
+    expect(macWindow, contains('standardWindowButton(.closeButton)'));
+    expect(macWindow, contains('standardWindowButton(.miniaturizeButton)'));
+    expect(macWindow, contains('standardWindowButton(.zoomButton)'));
+    expect(macWindow, contains('setFrameOrigin'));
+    expect(macWindow, contains('NSWindow.didResizeNotification'));
+    expect(macWindow, contains('DispatchQueue.main.async'));
+  });
+
   test('桌面 runner 默认尺寸与 window_manager 配置保持一致', () {
     final macXib = File(
       'macos/Runner/Base.lproj/MainMenu.xib',
