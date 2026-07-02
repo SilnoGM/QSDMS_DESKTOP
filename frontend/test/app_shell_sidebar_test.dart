@@ -310,4 +310,27 @@ void main() {
     expect(find.text('维护通知'), findsOneWidget);
     expect(find.text('今晚 22:00 进行桌面端维护'), findsOneWidget);
   });
+
+  testWidgets('公告卡片展开状态撑满侧边栏可用宽度', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: QsdmsSidebarDefaults.menuItems,
+            activeItemId: 'dashboard',
+            displayMode: SidebarDisplayMode.expanded,
+            user: QsdmsSidebarDefaults.user,
+            notice: QsdmsSidebarDefaults.notice,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final noticeCardSize = tester.getSize(
+      find.byKey(const ValueKey('sidebar-notice-card')),
+    );
+
+    expect(noticeCardSize.width, greaterThanOrEqualTo(223));
+  });
 }
