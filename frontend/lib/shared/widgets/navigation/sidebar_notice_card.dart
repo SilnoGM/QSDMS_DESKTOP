@@ -12,31 +12,22 @@ class SidebarNoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isInteractive = notice.canOpen && onNoticeTap != null;
+    const borderRadius = BorderRadius.all(Radius.circular(8));
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       child: SizedBox(
         width: double.infinity,
-        child: InkWell(
-          key: const ValueKey('sidebar-notice-card'),
-          borderRadius: BorderRadius.circular(8),
-          onTap: notice.canOpen && onNoticeTap != null
-              ? () => onNoticeTap!(notice)
-              : null,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 112),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0F101828),
-                  blurRadius: 12,
-                  offset: Offset(0, 6),
-                ),
-              ],
-            ),
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: InkWell(
+            key: const ValueKey('sidebar-notice-card'),
+            borderRadius: borderRadius,
+            mouseCursor: isInteractive
+                ? SystemMouseCursors.click
+                : SystemMouseCursors.basic,
+            onTap: isInteractive ? () => onNoticeTap!(notice) : null,
             child: notice.imageAssetPath == null
                 ? _NoticeTextFallback(notice: notice)
                 : _NoticeImage(
@@ -60,17 +51,14 @@ class _NoticeImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 666 / 312,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Image.asset(
-          assetPath,
-          key: const ValueKey('sidebar-notice-image'),
-          fit: BoxFit.cover,
-          semanticLabel: semanticLabel,
-          errorBuilder: (context, error, stackTrace) {
-            return const _NoticeImagePlaceholder();
-          },
-        ),
+      child: Image.asset(
+        assetPath,
+        key: const ValueKey('sidebar-notice-image'),
+        fit: BoxFit.cover,
+        semanticLabel: semanticLabel,
+        errorBuilder: (context, error, stackTrace) {
+          return const _NoticeImagePlaceholder();
+        },
       ),
     );
   }

@@ -438,6 +438,17 @@ void main() {
     );
     final noticeImageProvider = noticeImage.image as AssetImage;
     expect(noticeImageProvider.assetName, 'assets/images/SystemNotice.png');
+    final noticeInkWell = tester.widget<InkWell>(
+      find.byKey(const ValueKey('sidebar-notice-card')),
+    );
+    expect(noticeInkWell.mouseCursor, SystemMouseCursors.click);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('sidebar-notice-card')),
+        matching: find.byType(Container),
+      ),
+      findsNothing,
+    );
 
     await tester.tap(find.byKey(const ValueKey('sidebar-notice-card')));
     await tester.pumpAndSettle();
