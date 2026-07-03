@@ -91,11 +91,16 @@ class SidebarNoticeConfig {
     required this.title,
     required this.description,
     required this.url,
+    this.imageAssetPath,
     this.enabled = true,
   });
 
   final String title;
   final String description;
   final String url;
+  final String? imageAssetPath;
   final bool enabled;
+
+  /// 公告必须同时可用且有链接，才允许触发外部跳转。
+  bool get canOpen => enabled && url.trim().isNotEmpty;
 }

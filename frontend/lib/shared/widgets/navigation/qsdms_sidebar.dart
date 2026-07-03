@@ -349,7 +349,8 @@ abstract final class QsdmsSidebarDefaults {
 
   static const notice = SidebarNoticeConfig(
     title: '系统公告',
-    description: '查看最新桌面端更新说明',
-    url: 'https://example.com/qsdms/notice',
+    description: '查看千树官方最新信息',
+    url: 'https://qianshu.ltd/web//official/#/',
+    imageAssetPath: 'assets/images/SystemNotice.png',
   );
 }

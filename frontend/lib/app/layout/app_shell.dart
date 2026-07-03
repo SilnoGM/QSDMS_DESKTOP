@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../shared/services/external_url_opener.dart';
 import '../../shared/widgets/navigation/qsdms_sidebar.dart';
 import '../../shared/widgets/navigation/sidebar_models.dart';
 import '../../shared/widgets/navigation/sidebar_selection_motion.dart';
@@ -40,6 +43,15 @@ class AppShell extends StatelessWidget {
     Get.offNamed(item.routeName);
   }
 
+  void _handleNoticeTap(SidebarNoticeConfig notice) {
+    if (onNoticeTap != null) {
+      onNoticeTap!(notice);
+      return;
+    }
+
+    unawaited(ExternalUrlOpener.open(notice.url));
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -63,7 +75,7 @@ class AppShell extends StatelessWidget {
                     notice: QsdmsSidebarDefaults.notice,
                     onMenuSelected: _handleMenuSelected,
                     onLogoutRequested: onLogoutRequested,
-                    onNoticeTap: onNoticeTap,
+                    onNoticeTap: _handleNoticeTap,
                   ),
                   Expanded(
                     child: DecoratedBox(

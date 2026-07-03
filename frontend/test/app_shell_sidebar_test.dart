@@ -86,7 +86,7 @@ void main() {
     expect(find.text('工作台'), findsOneWidget);
     expect(find.text('基础数据'), findsOneWidget);
     expect(find.text('系统设置'), findsOneWidget);
-    expect(find.text('系统公告'), findsOneWidget);
+    expect(find.byKey(const ValueKey('sidebar-notice-image')), findsOneWidget);
     expect(find.text('SilnoGM'), findsOneWidget);
   });
 
@@ -413,8 +413,8 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('公告卡片展开可见并触发回调，折叠状态隐藏', (tester) async {
-    var noticeTapCount = 0;
+  testWidgets('公告卡片展开可见并触发官网链接回调，折叠状态隐藏', (tester) async {
+    final tappedNotices = <SidebarNoticeConfig>[];
 
     await tester.pumpWidget(
       MaterialApp(
@@ -425,19 +425,25 @@ void main() {
             displayMode: SidebarDisplayMode.expanded,
             user: QsdmsSidebarDefaults.user,
             notice: QsdmsSidebarDefaults.notice,
-            onNoticeTap: (_) => noticeTapCount++,
+            onNoticeTap: tappedNotices.add,
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('系统公告'), findsOneWidget);
+    expect(find.byKey(const ValueKey('sidebar-notice-image')), findsOneWidget);
+    final noticeImage = tester.widget<Image>(
+      find.byKey(const ValueKey('sidebar-notice-image')),
+    );
+    final noticeImageProvider = noticeImage.image as AssetImage;
+    expect(noticeImageProvider.assetName, 'assets/images/SystemNotice.png');
 
     await tester.tap(find.byKey(const ValueKey('sidebar-notice-card')));
     await tester.pumpAndSettle();
 
-    expect(noticeTapCount, 1);
+    expect(tappedNotices, hasLength(1));
+    expect(tappedNotices.single.url, 'https://qianshu.ltd/web//official/#/');
 
     await tester.pumpWidget(
       MaterialApp(
@@ -448,22 +454,23 @@ void main() {
             displayMode: SidebarDisplayMode.collapsed,
             user: QsdmsSidebarDefaults.user,
             notice: QsdmsSidebarDefaults.notice,
-            onNoticeTap: (_) => noticeTapCount++,
+            onNoticeTap: tappedNotices.add,
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('系统公告'), findsNothing);
+    expect(find.byKey(const ValueKey('sidebar-notice-image')), findsNothing);
     expect(find.byKey(const ValueKey('sidebar-notice-card')), findsNothing);
   });
 
-  testWidgets('公告卡片展示传入的标题和说明', (tester) async {
+  testWidgets('公告卡片展示传入的本地图片资源', (tester) async {
     const notice = SidebarNoticeConfig(
       title: '维护通知',
       description: '今晚 22:00 进行桌面端维护',
       url: 'https://example.com/maintenance',
+      imageAssetPath: 'assets/images/SystemNotice.png',
     );
 
     await tester.pumpWidget(
@@ -481,8 +488,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('维护通知'), findsOneWidget);
-    expect(find.text('今晚 22:00 进行桌面端维护'), findsOneWidget);
+    final noticeImage = tester.widget<Image>(
+      find.byKey(const ValueKey('sidebar-notice-image')),
+    );
+    final noticeImageProvider = noticeImage.image as AssetImage;
+    expect(noticeImageProvider.assetName, 'assets/images/SystemNotice.png');
   });
 
   testWidgets('公告卡片展开状态撑满侧边栏可用宽度', (tester) async {
