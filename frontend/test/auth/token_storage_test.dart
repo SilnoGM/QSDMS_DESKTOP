@@ -43,6 +43,12 @@ void main() {
     expect(await storage.readRefreshToken(), isNull);
     expect(secureStore.values, isEmpty);
   });
+
+  test('macOS 安全存储使用标准 Keychain 以兼容本地无开发证书调试包', () {
+    final macOsOptions = FlutterSecureTokenStore.macOsOptions.toMap();
+
+    expect(macOsOptions['usesDataProtectionKeychain'], 'false');
+  });
 }
 
 class _MemorySecureTokenStore implements SecureTokenStore {

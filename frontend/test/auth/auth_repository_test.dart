@@ -12,10 +12,7 @@ void main() {
   test('login 接受后端 *_SUCCESS 统一响应码', () async {
     final repository = _buildRepository(_AuthRepositoryAdapter());
 
-    final result = await repository.login(
-      username: 'admin',
-      password: 'admin',
-    );
+    final result = await repository.login(username: 'admin', password: 'admin');
 
     expect(result.accessToken, 'access-token');
     expect(result.refreshToken, 'refresh-token');

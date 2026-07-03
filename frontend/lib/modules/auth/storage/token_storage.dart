@@ -14,7 +14,16 @@ abstract interface class SecureTokenStore {
 
 class FlutterSecureTokenStore implements SecureTokenStore {
   FlutterSecureTokenStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            // 本地 Flutter macOS 调试包通常没有开发签名证书。关闭 Data
+            // Protection Keychain 后仍使用系统 Keychain，但不额外要求
+            // Keychain Sharing entitlement，避免安全存储写入阶段阻断登录。
+            mOptions: macOsOptions,
+          );
+
+  static const macOsOptions = MacOsOptions(usesDataProtectionKeychain: false);
 
   final FlutterSecureStorage _storage;
 
