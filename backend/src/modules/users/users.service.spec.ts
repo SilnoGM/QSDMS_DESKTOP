@@ -73,6 +73,156 @@ describe('UsersService', () => {
     });
   });
 
+  it('非 SUPER_ADMIN 创建用户时不能授予 SUPER_ADMIN 角色', async () => {
+    prisma.role.findMany.mockResolvedValue([createRole()]);
+    prisma.user.findUnique.mockResolvedValue(
+      createUserRecord({
+        id: 'actor-user',
+        username: 'actor',
+        userRoles: [
+          {
+            role: createRole({
+              id: 2,
+              code: 'ADMIN',
+              isSystem: false,
+            }),
+          },
+        ],
+      }),
+    );
+    prisma.user.create.mockResolvedValue(
+      createEffectiveSuperAdmin({
+        id: 'new-user',
+        username: 'new-user',
+        profile: {
+          displayName: '新用户',
+          phone: null,
+          email: null,
+          avatarUrl: null,
+          departmentName: null,
+          postName: null,
+        },
+      }),
+    );
+    prisma.auditLog.create.mockResolvedValue({});
+
+    await expect(
+      service.create(createCreateUserDto({ roleIds: [1] }), createActor()),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'FORBIDDEN',
+        data: null,
+      },
+      status: 403,
+    });
+    expect(prisma.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'actor-user' } }),
+    );
+    expect(prisma.user.create).not.toHaveBeenCalled();
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('有效 SUPER_ADMIN 创建用户时可以授予 SUPER_ADMIN 角色', async () => {
+    prisma.role.findMany.mockResolvedValue([createRole()]);
+    prisma.user.findUnique.mockResolvedValue(
+      createEffectiveSuperAdmin({
+        id: 'actor-user',
+        username: 'actor',
+      }),
+    );
+    prisma.user.create.mockResolvedValue(
+      createEffectiveSuperAdmin({
+        id: 'new-user',
+        username: 'new-user',
+        profile: {
+          displayName: '新用户',
+          phone: null,
+          email: null,
+          avatarUrl: null,
+          departmentName: null,
+          postName: null,
+        },
+      }),
+    );
+    prisma.auditLog.create.mockResolvedValue({});
+
+    await expect(
+      service.create(createCreateUserDto({ roleIds: [1] }), createActor()),
+    ).resolves.toMatchObject({
+      id: 'new-user',
+      roles: [expect.objectContaining({ code: 'SUPER_ADMIN' })],
+    });
+
+    expect(prisma.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'actor-user' } }),
+    );
+    expect(prisma.user.findUnique.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.user.create.mock.invocationCallOrder[0],
+    );
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userRoles: {
+            create: [
+              {
+                roleId: 1,
+                assignedBy: 'actor-user',
+              },
+            ],
+          },
+        }),
+      }),
+    );
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        actorUserId: 'actor-user',
+        metadata: {
+          targetUsername: 'new-user',
+          roleIds: [1],
+          changedFields: ['username', 'profile', 'roles'],
+        },
+      }),
+    });
+    expect(JSON.stringify(prisma.auditLog.create.mock.calls[0][0].data.metadata))
+      .not.toContain('actor');
+  });
+
+  it('创建普通角色用户时不要求操作者是 SUPER_ADMIN', async () => {
+    prisma.role.findMany.mockResolvedValue([
+      createRole({ id: 2, code: 'ADMIN', isSystem: false }),
+    ]);
+    prisma.user.create.mockResolvedValue(
+      createUserRecord({
+        id: 'new-user',
+        username: 'new-user',
+        profile: {
+          displayName: '新用户',
+          phone: null,
+          email: null,
+          avatarUrl: null,
+          departmentName: null,
+          postName: null,
+        },
+        userRoles: [
+          {
+            role: createRole({ id: 2, code: 'ADMIN', isSystem: false }),
+          },
+        ],
+      }),
+    );
+    prisma.auditLog.create.mockResolvedValue({});
+
+    await expect(
+      service.create(createCreateUserDto({ roleIds: [2] }), createActor()),
+    ).resolves.toMatchObject({
+      id: 'new-user',
+      roles: [expect.objectContaining({ code: 'ADMIN' })],
+    });
+
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(prisma.user.create).toHaveBeenCalled();
+  });
+
   it('不能禁用最后一个有效 SUPER_ADMIN', async () => {
     prisma.user.findUnique.mockResolvedValue(createEffectiveSuperAdmin());
     prisma.user.count.mockResolvedValue(1);
@@ -339,6 +489,16 @@ function createActor() {
     username: 'actor',
     status: 'ACTIVE',
     tokenVersion: 0,
+  };
+}
+
+function createCreateUserDto(overrides: Record<string, unknown> = {}) {
+  return {
+    username: 'new-user',
+    password: 'Init#123456',
+    displayName: '新用户',
+    roleIds: [2],
+    ...overrides,
   };
 }
 

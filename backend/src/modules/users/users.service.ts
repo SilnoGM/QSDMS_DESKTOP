@@ -84,6 +84,9 @@ export class UsersService {
 
     const user = await this.prisma.$transaction(async (tx) => {
       const roles = await this.findActiveRolesOrThrow(tx, roleIds);
+      // 创建用户时直接授予 SUPER_ADMIN 同样属于二阶提权，必须在写入
+      // userRoles 前确认当前操作者仍是有效超级管理员。
+      await this.assertCanGrantSuperAdminRole(tx, actor, roles);
       const created = await tx.user.create({
         data: {
           username: dto.username,
