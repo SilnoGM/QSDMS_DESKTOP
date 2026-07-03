@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
 import '../../modules/base_data/base_data_page.dart';
+import '../../modules/auth/auth_route_middleware.dart';
+import '../../modules/auth/login_page.dart';
 import '../../modules/home/home_binding.dart';
 import '../../modules/home/home_page.dart';
 import '../../modules/settings/settings_page.dart';
@@ -16,8 +18,22 @@ abstract final class AppPages {
       name: AppRoutes.home,
       page: () => const HomePage(),
       binding: HomeBinding(),
+      middlewares: [AuthRouteMiddleware.protected()],
     ),
-    GetPage(name: AppRoutes.baseData, page: () => const BaseDataPage()),
-    GetPage(name: AppRoutes.settings, page: () => const SettingsPage()),
+    GetPage(
+      name: AppRoutes.login,
+      page: () => const LoginPage(),
+      middlewares: [AuthRouteMiddleware.guest()],
+    ),
+    GetPage(
+      name: AppRoutes.baseData,
+      page: () => const BaseDataPage(),
+      middlewares: [AuthRouteMiddleware.protected()],
+    ),
+    GetPage(
+      name: AppRoutes.settings,
+      page: () => const SettingsPage(),
+      middlewares: [AuthRouteMiddleware.protected()],
+    ),
   ];
 }

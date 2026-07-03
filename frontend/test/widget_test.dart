@@ -1,16 +1,34 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:qsdms_desktop_frontend/app/bindings/initial_binding.dart';
 import 'package:qsdms_desktop_frontend/app/qsdms_app.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/auth_controller.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/models/auth_session.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/repositories/auth_repository.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/storage/preference_storage.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/storage/token_storage.dart';
 import 'package:qsdms_desktop_frontend/modules/home/home_controller.dart';
+import 'package:qsdms_desktop_frontend/shared/services/api_client.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_menu_item.dart';
 
 void main() {
+  setUp(() {
+    Get.testMode = true;
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
+  tearDown(Get.reset);
+
   Future<void> pumpApp(WidgetTester tester) async {
-    await tester.pumpWidget(const QsdmsApp());
+    await tester.pumpWidget(
+      QsdmsApp(initialBinding: _AuthenticatedTestBinding()),
+    );
     await tester.pumpAndSettle();
   }
 
@@ -256,4 +274,68 @@ void main() {
 
     expect(pubspec, contains('flutter_animate:'));
   });
+}
+
+class _AuthenticatedTestBinding extends InitialBinding {
+  @override
+  void dependencies() {
+    final tokenStorage = TokenStorage(secureStore: _MemorySecureTokenStore());
+    final repository = _FakeAuthRepository();
+    final controller = _AuthenticatedAuthController(
+      repository: repository,
+      tokenStorage: tokenStorage,
+      preferenceStorage: PreferenceStorage(),
+    );
+
+    Get.put<TokenStorage>(tokenStorage, permanent: true);
+    Get.put<ApiClient>(
+      ApiClient(dio: Dio(), tokenStorage: tokenStorage),
+      permanent: true,
+    );
+    Get.put<AuthRepository>(repository, permanent: true);
+    Get.put<AuthController>(controller, permanent: true);
+  }
+}
+
+class _AuthenticatedAuthController extends AuthController {
+  _AuthenticatedAuthController({
+    required super.repository,
+    required super.tokenStorage,
+    required super.preferenceStorage,
+  });
+
+  @override
+  bool get isAuthenticated => true;
+}
+
+class _FakeAuthRepository extends AuthRepository {
+  _FakeAuthRepository()
+    : super(
+        apiClient: ApiClient(
+          dio: Dio(),
+          tokenStorage: TokenStorage(secureStore: _MemorySecureTokenStore()),
+        ),
+      );
+
+  @override
+  Future<AuthSession> refreshSession(String refreshToken) async {
+    throw StateError('widget tests should not refresh auth state');
+  }
+}
+
+class _MemorySecureTokenStore implements SecureTokenStore {
+  final values = <String, String>{};
+
+  @override
+  Future<void> delete({required String key}) async {
+    values.remove(key);
+  }
+
+  @override
+  Future<String?> read({required String key}) async => values[key];
+
+  @override
+  Future<void> write({required String key, required String value}) async {
+    values[key] = value;
+  }
 }
