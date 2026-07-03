@@ -114,22 +114,14 @@ async function syncRolePermissions(prisma: PrismaClient): Promise<void> {
       return permissionId;
     });
 
-    // 内置角色的授权集合由 seed 负责维护；重复执行时先清掉不再属于该角色的授权，再补齐缺失授权。
-    await prisma.$transaction([
-      prisma.rolePermission.deleteMany({
-        where: {
-          roleId: role.id,
-          permissionId: { notIn: permissionIds },
-        },
-      }),
-      prisma.rolePermission.createMany({
-        data: permissionIds.map((permissionId) => ({
-          roleId: role.id,
-          permissionId,
-        })),
-        skipDuplicates: true,
-      }),
-    ]);
+    // 不删除额外授权，避免 seed 误删人工配置；这里只补齐内置角色缺失的授权。
+    await prisma.rolePermission.createMany({
+      data: permissionIds.map((permissionId) => ({
+        roleId: role.id,
+        permissionId,
+      })),
+      skipDuplicates: true,
+    });
   }
 }
 

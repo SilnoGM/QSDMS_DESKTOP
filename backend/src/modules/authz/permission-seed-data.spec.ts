@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import {
   ACTION_API_PERMISSION_MAP,
   ACTION_PERMISSION_SEEDS,
@@ -67,17 +70,39 @@ describe('permission seed data', () => {
     ).toBe(false);
   });
 
-  it('creates the fixed development administrator only in development or by explicit opt-in', () => {
+  it('creates the fixed development administrator in development', () => {
     expect(
       isDevelopmentAdminSeedEnabled({
         NODE_ENV: 'development',
       }),
     ).toBe(true);
+  });
+
+  it('allows explicit development administrator opt-in outside production', () => {
+    expect(
+      isDevelopmentAdminSeedEnabled({
+        NODE_ENV: 'test',
+        QSDMS_SEED_DEV_ADMIN: 'true',
+      }),
+    ).toBe(true);
+  });
+
+  it('does not create the fixed development administrator in production even by explicit opt-in', () => {
     expect(
       isDevelopmentAdminSeedEnabled({
         NODE_ENV: 'production',
         QSDMS_SEED_DEV_ADMIN: 'true',
       }),
-    ).toBe(true);
+    ).toBe(false);
+  });
+
+  it('does not delete extra role permission grants from the seed script', () => {
+    const seedScript = readFileSync(
+      join(process.cwd(), 'prisma/seed.ts'),
+      'utf8',
+    );
+
+    // seed 只补齐内置角色缺失授权，不能删除人工维护或后续扩展的额外授权。
+    expect(seedScript).not.toContain('rolePermission.deleteMany');
   });
 });

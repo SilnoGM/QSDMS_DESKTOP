@@ -406,10 +406,14 @@ export const DEVELOPMENT_ADMIN_SEED = {
   displayName: '系统管理员',
 } as const;
 
-// 固定 admin/admin 只服务本地开发和显式初始化，生产环境默认不会创建该账号。
+// 固定 admin/admin 只服务本地开发和非生产环境显式初始化；生产环境永远禁止创建该账号。
 export function isDevelopmentAdminSeedEnabled(
   env: DevelopmentAdminSeedEnv,
 ): boolean {
+  if (env.NODE_ENV === 'production') {
+    return false;
+  }
+
   return (
     env.NODE_ENV === 'development' || env.QSDMS_SEED_DEV_ADMIN === 'true'
   );
