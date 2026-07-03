@@ -1,7 +1,9 @@
 import {
   ACTION_API_PERMISSION_MAP,
+  ACTION_PERMISSION_SEEDS,
   ENABLED_PERMISSION_CODES,
   PERMISSION_SEEDS,
+  ROLE_SEEDS,
   ROLE_PERMISSION_CODE_MAP,
   SYSTEM_ROLE_CODES,
   isDevelopmentAdminSeedEnabled,
@@ -14,6 +16,12 @@ describe('permission seed data', () => {
     expect(new Set(codes).size).toBe(codes.length);
   });
 
+  it('keeps role codes unique', () => {
+    const codes = ROLE_SEEDS.map((role) => role.code);
+
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
   it('keeps all action to api mappings backed by real permission codes', () => {
     const codes = new Set(PERMISSION_SEEDS.map((permission) => permission.code));
 
@@ -21,6 +29,18 @@ describe('permission seed data', () => {
       expect(codes.has(mapping.actionCode)).toBe(true);
       expect(codes.has(mapping.apiCode)).toBe(true);
     }
+  });
+
+  it('covers every action permission with an action to api mapping', () => {
+    // 业务动作权限必须纳入映射表治理，避免按钮权限与接口权限各自漂移。
+    const mappedActionCodes = new Set(
+      ACTION_API_PERMISSION_MAP.map((mapping) => mapping.actionCode),
+    );
+    const unmappedActionCodes = ACTION_PERMISSION_SEEDS.map(
+      (permission) => permission.code,
+    ).filter((code) => !mappedActionCodes.has(code));
+
+    expect(unmappedActionCodes).toEqual([]);
   });
 
   it('grants every enabled permission to SUPER_ADMIN', () => {
