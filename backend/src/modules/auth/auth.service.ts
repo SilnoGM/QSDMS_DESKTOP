@@ -253,8 +253,12 @@ export class AuthService {
     currentUser: CurrentUserPayload,
     dto: LogoutDto,
   ): Promise<LogoutResult> {
-    const parsedToken = dto.refreshToken
-      ? this.tryParseRefreshToken(dto.refreshToken)
+    const refreshToken = dto.refreshToken;
+    const hasRefreshToken = refreshToken !== undefined && refreshToken !== '';
+    // 调用方显式传入 refresh token 时，退出语义限定为“只撤销该 session”；
+    // token 格式非法也不能降级成全量退出，避免误撤销当前用户的其他会话。
+    const parsedToken = hasRefreshToken
+      ? this.parseRefreshToken(refreshToken)
       : null;
     const revokedAt = new Date();
 

@@ -501,6 +501,67 @@ describe('AuthService', () => {
       },
     });
   });
+
+  it('logout 空 refreshToken 字符串会撤销当前用户所有未撤销 refresh sessions', async () => {
+    prisma.refreshSession.updateMany.mockResolvedValue({ count: 2 });
+
+    await expect(
+      authService.logout(createCurrentUser(), { refreshToken: '' }),
+    ).resolves.toEqual({
+      success: true,
+    });
+
+    expect(prisma.refreshSession.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.refreshSession.updateMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-1',
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: expect.any(Date),
+      },
+    });
+  });
+
+  it('logout 带有效 refreshToken 只撤销当前用户该 refresh session', async () => {
+    prisma.refreshSession.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(
+      authService.logout(createCurrentUser(), {
+        refreshToken: 'session_current.valid-secret',
+      }),
+    ).resolves.toEqual({
+      success: true,
+    });
+
+    expect(prisma.refreshSession.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.refreshSession.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'session_current',
+        userId: 'user-1',
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: expect.any(Date),
+      },
+    });
+  });
+
+  it('logout 带非法 refreshToken 返回 TOKEN_REVOKED 且不撤销当前用户全部 sessions', async () => {
+    await expect(
+      authService.logout(createCurrentUser(), {
+        refreshToken: 'invalid-refresh-token',
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'TOKEN_REVOKED',
+        data: null,
+      },
+      status: 401,
+    });
+
+    expect(prisma.refreshSession.updateMany).not.toHaveBeenCalled();
+  });
 });
 
 function createCurrentUser(overrides: Record<string, unknown> = {}) {
