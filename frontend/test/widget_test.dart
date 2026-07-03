@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:qsdms_desktop_frontend/app/bindings/initial_binding.dart';
 import 'package:qsdms_desktop_frontend/app/qsdms_app.dart';
+import 'package:qsdms_desktop_frontend/app/routes/app_routes.dart';
 import 'package:qsdms_desktop_frontend/modules/auth/auth_controller.dart';
 import 'package:qsdms_desktop_frontend/modules/auth/models/auth_session.dart';
 import 'package:qsdms_desktop_frontend/modules/auth/repositories/auth_repository.dart';
@@ -27,7 +28,10 @@ void main() {
 
   Future<void> pumpApp(WidgetTester tester) async {
     await tester.pumpWidget(
-      QsdmsApp(initialBinding: _AuthenticatedTestBinding()),
+      QsdmsApp(
+        initialRoute: AppRoutes.home,
+        initialBinding: _AuthenticatedTestBinding(),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -318,7 +322,7 @@ class _FakeAuthRepository extends AuthRepository {
       );
 
   @override
-  Future<AuthSession> refreshSession(String refreshToken) async {
+  Future<AuthTokenResult> refreshSession(String refreshToken) async {
     throw StateError('widget tests should not refresh auth state');
   }
 }

@@ -66,22 +66,24 @@ class _FakeAuthRepository extends AuthRepository {
       );
 
   @override
-  Future<AuthSession> login({
+  Future<AuthTokenResult> login({
     required String username,
     required String password,
   }) async {
-    return const AuthSession(
+    return const AuthTokenResult(
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
-      user: AuthUser(
-        id: '1',
-        username: 'admin',
-        displayName: '管理员',
-        raw: <String, dynamic>{},
+      snapshot: AuthSessionSnapshot(
+        user: AuthUser(
+          id: '1',
+          username: 'admin',
+          displayName: '管理员',
+          raw: <String, dynamic>{},
+        ),
+        roles: {'admin'},
+        permissions: {'system:user:list'},
+        menus: <Map<String, dynamic>>[],
       ),
-      roles: {'admin'},
-      permissions: {'system:user:list'},
-      menus: <Map<String, dynamic>>[],
     );
   }
 }

@@ -1,12 +1,14 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:qsdms_desktop_frontend/app/bindings/initial_binding.dart';
 import 'package:qsdms_desktop_frontend/app/qsdms_app.dart';
 import 'package:qsdms_desktop_frontend/app/routes/app_routes.dart';
 import 'package:qsdms_desktop_frontend/modules/auth/auth_controller.dart';
-import 'package:qsdms_desktop_frontend/modules/auth/models/auth_session.dart';
 import 'package:qsdms_desktop_frontend/modules/auth/repositories/auth_repository.dart';
 import 'package:qsdms_desktop_frontend/modules/auth/storage/preference_storage.dart';
 import 'package:qsdms_desktop_frontend/modules/auth/storage/token_storage.dart';
@@ -15,51 +17,40 @@ import 'package:qsdms_desktop_frontend/shared/services/api_client.dart';
 void main() {
   setUp(() {
     Get.testMode = true;
+    SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
   tearDown(Get.reset);
 
-  testWidgets('未认证访问受保护页面跳转登录页', (tester) async {
-    await tester.pumpWidget(
-      QsdmsApp(
-        initialRoute: AppRoutes.home,
-        initialBinding: _AuthTestBinding(isAuthenticated: false),
-      ),
-    );
+  testWidgets('应用冷启动恢复会话时先显示恢复页而不是登录表单', (tester) async {
+    final binding = _RestoringAuthBinding();
+
+    await tester.pumpWidget(QsdmsApp(initialBinding: binding));
+    await tester.pump();
+
+    expect(find.text('正在恢复登录状态...'), findsOneWidget);
+    expect(find.text('登录系统'), findsNothing);
+
+    binding.controller.completeRestore();
     await tester.pumpAndSettle();
 
-    expect(Get.currentRoute, AppRoutes.login);
-    expect(find.text('登录系统'), findsOneWidget);
-  });
-
-  testWidgets('已认证访问登录页跳转首页', (tester) async {
-    await tester.pumpWidget(
-      QsdmsApp(
-        initialRoute: AppRoutes.login,
-        initialBinding: _AuthTestBinding(isAuthenticated: true),
-      ),
-    );
-    await tester.pumpAndSettle();
-
+    expect(binding.controller.restoreCallCount, 1);
     expect(Get.currentRoute, AppRoutes.home);
     expect(find.text('当前页面：工作台'), findsOneWidget);
   });
 }
 
-class _AuthTestBinding extends InitialBinding {
-  _AuthTestBinding({required this.isAuthenticated});
-
-  final bool isAuthenticated;
+class _RestoringAuthBinding extends InitialBinding {
+  late final _RestoringAuthController controller;
 
   @override
   void dependencies() {
     final tokenStorage = TokenStorage(secureStore: _MemorySecureTokenStore());
     final repository = _FakeAuthRepository();
-    final controller = _FakeAuthController(
+    controller = _RestoringAuthController(
       repository: repository,
       tokenStorage: tokenStorage,
       preferenceStorage: PreferenceStorage(),
-      isAuthenticatedValue: isAuthenticated,
     );
 
     Get.put<TokenStorage>(tokenStorage, permanent: true);
@@ -72,18 +63,30 @@ class _AuthTestBinding extends InitialBinding {
   }
 }
 
-class _FakeAuthController extends AuthController {
-  _FakeAuthController({
+class _RestoringAuthController extends AuthController {
+  _RestoringAuthController({
     required super.repository,
     required super.tokenStorage,
     required super.preferenceStorage,
-    required this.isAuthenticatedValue,
   });
 
-  final bool isAuthenticatedValue;
+  final Completer<void> _restoreCompleter = Completer<void>();
+  var _authenticated = false;
+  var restoreCallCount = 0;
 
   @override
-  bool get isAuthenticated => isAuthenticatedValue;
+  bool get isAuthenticated => _authenticated;
+
+  @override
+  Future<void> restoreSession() async {
+    restoreCallCount++;
+    await _restoreCompleter.future;
+    _authenticated = true;
+  }
+
+  void completeRestore() {
+    _restoreCompleter.complete();
+  }
 }
 
 class _FakeAuthRepository extends AuthRepository {
@@ -94,11 +97,6 @@ class _FakeAuthRepository extends AuthRepository {
           tokenStorage: TokenStorage(secureStore: _MemorySecureTokenStore()),
         ),
       );
-
-  @override
-  Future<AuthTokenResult> refreshSession(String refreshToken) async {
-    throw StateError('route middleware tests should not refresh');
-  }
 }
 
 class _MemorySecureTokenStore implements SecureTokenStore {

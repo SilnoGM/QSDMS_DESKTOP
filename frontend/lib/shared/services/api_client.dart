@@ -180,7 +180,6 @@ class ApiClient {
   bool _isLoginOrRefresh(String path) {
     final normalizedPath = Uri.parse(path).path;
     return normalizedPath.endsWith('/auth/login') ||
-        normalizedPath.endsWith('/auth/refresh') ||
-        normalizedPath.endsWith('/auth/logout');
+        normalizedPath.endsWith('/auth/refresh');
   }
 }

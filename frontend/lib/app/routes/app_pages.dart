@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../modules/base_data/base_data_page.dart';
+import '../../modules/auth/auth_bootstrap_page.dart';
 import '../../modules/auth/auth_route_middleware.dart';
 import '../../modules/auth/login_page.dart';
 import '../../modules/home/home_binding.dart';
@@ -14,6 +15,10 @@ import 'app_routes.dart';
 /// Controller 的生命周期绑定在一起。
 abstract final class AppPages {
   static final routes = <GetPage>[
+    GetPage(
+      name: AppRoutes.authBootstrap,
+      page: () => const AuthBootstrapPage(),
+    ),
     GetPage(
       name: AppRoutes.home,
       page: () => const HomePage(),

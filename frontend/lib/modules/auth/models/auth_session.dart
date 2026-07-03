@@ -58,32 +58,29 @@ class AuthSessionSnapshot {
   }
 }
 
-/// 后端登录 / refresh 返回的认证会话。
+/// 后端登录 / refresh 返回的短生命周期 token 结果。
 ///
-/// `accessToken` 和 `refreshToken` 只在这里短暂流转，真正存放位置由
-/// `TokenStorage` 负责，避免页面或 Controller 随意选择不安全的持久化介质。
-class AuthSession extends AuthSessionSnapshot {
-  const AuthSession({
+/// 安全边界：
+/// - token 只允许从仓储短暂流转到 `TokenStorage`；
+/// - 全局 Controller 和页面只能持有 `snapshot`，不能把 token 放进可观察状态；
+/// - 不继承 `AuthSessionSnapshot`，避免误把带 token 对象当作页面 session 使用。
+class AuthTokenResult {
+  const AuthTokenResult({
     required this.accessToken,
     required this.refreshToken,
-    required super.user,
-    required super.roles,
-    required super.permissions,
-    required super.menus,
+    required this.snapshot,
   });
 
   final String accessToken;
   final String refreshToken;
+  final AuthSessionSnapshot snapshot;
 
-  factory AuthSession.fromResponseData(Map<String, dynamic> data) {
+  factory AuthTokenResult.fromResponseData(Map<String, dynamic> data) {
     final snapshot = AuthSessionSnapshot.fromResponseData(data);
-    return AuthSession(
+    return AuthTokenResult(
       accessToken: _requireString(data, 'accessToken'),
       refreshToken: _requireString(data, 'refreshToken'),
-      user: snapshot.user,
-      roles: snapshot.roles,
-      permissions: snapshot.permissions,
-      menus: snapshot.menus,
+      snapshot: snapshot,
     );
   }
 }

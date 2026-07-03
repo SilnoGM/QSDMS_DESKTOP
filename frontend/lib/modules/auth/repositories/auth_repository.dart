@@ -12,7 +12,7 @@ class AuthRepository {
 
   final ApiClient apiClient;
 
-  Future<AuthSession> login({
+  Future<AuthTokenResult> login({
     required String username,
     required String password,
   }) async {
@@ -24,10 +24,10 @@ class AuthRepository {
       ),
     );
 
-    return AuthSession.fromResponseData(_unwrapMapData(response.data));
+    return AuthTokenResult.fromResponseData(_unwrapMapData(response.data));
   }
 
-  Future<AuthSession> refreshSession(String refreshToken) async {
+  Future<AuthTokenResult> refreshSession(String refreshToken) async {
     final response = await apiClient.dio.post<Map<String, dynamic>>(
       '/auth/refresh',
       data: <String, dynamic>{'refreshToken': refreshToken},
@@ -36,7 +36,7 @@ class AuthRepository {
       ),
     );
 
-    return AuthSession.fromResponseData(_unwrapMapData(response.data));
+    return AuthTokenResult.fromResponseData(_unwrapMapData(response.data));
   }
 
   Future<AuthSessionSnapshot> fetchSession() async {

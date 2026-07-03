@@ -21,7 +21,8 @@ class AuthController extends GetxController {
   final TokenStorage tokenStorage;
   final PreferenceStorage preferenceStorage;
 
-  final session = Rxn<AuthSession>();
+  // 全局 observable 只保存无 token 的会话快照；token 只允许进入 TokenStorage。
+  final session = Rxn<AuthSessionSnapshot>();
   final rememberLogin = false.obs;
   final lastUsername = ''.obs;
   final isLoading = false.obs;
@@ -44,12 +45,6 @@ class AuthController extends GetxController {
   void onInit() {
     super.onInit();
     loadRememberedLogin();
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
-    restoreSession();
   }
 
   Future<void> loadRememberedLogin() async {
@@ -77,7 +72,7 @@ class AuthController extends GetxController {
         accessToken: nextSession.accessToken,
         refreshToken: nextSession.refreshToken,
       );
-      session.value = nextSession;
+      session.value = nextSession.snapshot;
       await _saveRememberPreference(
         username: username,
         shouldRemember: rememberLogin,
@@ -109,7 +104,7 @@ class AuthController extends GetxController {
         accessToken: nextSession.accessToken,
         refreshToken: nextSession.refreshToken,
       );
-      session.value = nextSession;
+      session.value = nextSession.snapshot;
     } catch (_) {
       await tokenStorage.clear();
       session.value = null;
@@ -137,7 +132,7 @@ class AuthController extends GetxController {
   }
 
   void applyRefreshedSessionData(Map<String, dynamic> data) {
-    session.value = AuthSession.fromResponseData(data);
+    session.value = AuthTokenResult.fromResponseData(data).snapshot;
   }
 
   bool can(String permission) => permissions.contains(permission);

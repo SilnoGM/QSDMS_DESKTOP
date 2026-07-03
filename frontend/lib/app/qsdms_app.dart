@@ -13,7 +13,7 @@ import 'theme/app_theme.dart';
 class QsdmsApp extends StatelessWidget {
   const QsdmsApp({
     this.initialBinding,
-    this.initialRoute = AppRoutes.home,
+    this.initialRoute = AppRoutes.authBootstrap,
     super.key,
   });
 

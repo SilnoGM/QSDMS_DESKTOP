@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,6 +63,118 @@ void main() {
     expect(await preferenceStorage.readLastUsername(), isNull);
     expect(controller.isAuthenticated, isTrue);
   });
+
+  test('登录和 refresh callback 只把无 token snapshot 放进 session', () async {
+    final tokenStorage = TokenStorage(secureStore: _MemorySecureTokenStore());
+    final controller = _buildController(
+      tokenStorage: tokenStorage,
+      repository: _FakeAuthRepository(loginSession: _session()),
+    );
+
+    await controller.login(
+      username: 'admin',
+      password: 'secret',
+      rememberLogin: false,
+    );
+
+    expect(controller.session.value, isA<AuthSessionSnapshot>());
+    expect(_exposesSensitiveTokenFields(controller.session.value), isFalse);
+    expect(tokenStorage.accessToken, 'access-token');
+    expect(await tokenStorage.readRefreshToken(), 'refresh-token');
+
+    controller.applyRefreshedSessionData(
+      _sessionResponseData(
+        accessToken: 'callback-access',
+        refreshToken: 'callback-refresh',
+        username: 'callback-admin',
+        permissions: {'system:callback'},
+      ),
+    );
+
+    expect(controller.session.value?.user.username, 'callback-admin');
+    expect(controller.permissions, {'system:callback'});
+    expect(_exposesSensitiveTokenFields(controller.session.value), isFalse);
+    expect(tokenStorage.accessToken, 'access-token');
+    expect(await tokenStorage.readRefreshToken(), 'refresh-token');
+  });
+
+  test('restoreSession 成功保存新 token 和无 token snapshot', () async {
+    final secureStore = _MemorySecureTokenStore();
+    final tokenStorage = TokenStorage(secureStore: secureStore);
+    await tokenStorage.saveTokens(
+      accessToken: 'stale-access',
+      refreshToken: 'stored-refresh',
+    );
+    final repository = _FakeAuthRepository(
+      loginSession: _session(),
+      refreshSessionResult: _session(
+        accessToken: 'restored-access',
+        refreshToken: 'restored-refresh',
+        permissions: {'system:restored'},
+      ),
+    );
+    final controller = _buildController(
+      tokenStorage: tokenStorage,
+      repository: repository,
+    );
+
+    await controller.restoreSession();
+
+    expect(repository.receivedRefreshToken, 'stored-refresh');
+    expect(tokenStorage.accessToken, 'restored-access');
+    expect(await tokenStorage.readRefreshToken(), 'restored-refresh');
+    expect(controller.permissions, {'system:restored'});
+    expect(_exposesSensitiveTokenFields(controller.session.value), isFalse);
+  });
+
+  test('restoreSession 失败清理本地 token 和 session', () async {
+    final secureStore = _MemorySecureTokenStore();
+    final tokenStorage = TokenStorage(secureStore: secureStore);
+    await tokenStorage.saveTokens(
+      accessToken: 'stale-access',
+      refreshToken: 'stored-refresh',
+    );
+    final controller = _buildController(
+      tokenStorage: tokenStorage,
+      repository: _FakeAuthRepository(
+        loginSession: _session(),
+        refreshError: StateError('refresh failed'),
+      ),
+    )..session.value = _session().snapshot;
+
+    await controller.restoreSession();
+
+    expect(tokenStorage.accessToken, isNull);
+    expect(await tokenStorage.readRefreshToken(), isNull);
+    expect(controller.session.value, isNull);
+  });
+
+  test('logout 调用后端时带 access token 并清理本地 token', () async {
+    final secureStore = _MemorySecureTokenStore();
+    final tokenStorage = TokenStorage(secureStore: secureStore);
+    await tokenStorage.saveTokens(
+      accessToken: 'logout-access',
+      refreshToken: 'logout-refresh',
+    );
+    final adapter = _LogoutAdapter();
+    final dio = Dio(BaseOptions(baseUrl: 'http://localhost:3000/api'))
+      ..httpClientAdapter = adapter;
+    final apiClient = ApiClient(dio: dio, tokenStorage: tokenStorage);
+    final controller = _buildController(
+      tokenStorage: tokenStorage,
+      repository: AuthRepository(apiClient: apiClient),
+    )..session.value = _session().snapshot;
+
+    await controller.logout();
+
+    expect(adapter.logoutCount, 1);
+    expect(adapter.logoutAuthorizationHeaders, <Object?>[
+      'Bearer logout-access',
+    ]);
+    expect(tokenStorage.accessToken, isNull);
+    expect(await tokenStorage.readRefreshToken(), isNull);
+    expect(controller.session.value, isNull);
+  });
 }
 
 AuthController _buildController({
@@ -76,40 +191,134 @@ AuthController _buildController({
   );
 }
 
-AuthSession _session({Set<String> permissions = const {'system:user:list'}}) {
-  return AuthSession(
-    accessToken: 'access-token',
-    refreshToken: 'refresh-token',
-    user: const AuthUser(
-      id: '1',
-      username: 'admin',
-      displayName: '管理员',
-      raw: <String, dynamic>{},
+AuthTokenResult _session({
+  String accessToken = 'access-token',
+  String refreshToken = 'refresh-token',
+  String username = 'admin',
+  Set<String> permissions = const {'system:user:list'},
+}) {
+  return AuthTokenResult(
+    accessToken: accessToken,
+    refreshToken: refreshToken,
+    snapshot: AuthSessionSnapshot(
+      user: AuthUser(
+        id: '1',
+        username: username,
+        displayName: '管理员',
+        raw: const <String, dynamic>{},
+      ),
+      roles: const {'admin'},
+      permissions: permissions,
+      menus: const <Map<String, dynamic>>[],
     ),
-    roles: const {'admin'},
-    permissions: permissions,
-    menus: const <Map<String, dynamic>>[],
   );
 }
 
-class _FakeAuthRepository extends AuthRepository {
-  _FakeAuthRepository({required this.loginSession})
-    : super(
-        apiClient: ApiClient(
-          dio: Dio(),
-          tokenStorage: TokenStorage(secureStore: _MemorySecureTokenStore()),
-        ),
-      );
+Map<String, dynamic> _sessionResponseData({
+  required String accessToken,
+  required String refreshToken,
+  required String username,
+  required Set<String> permissions,
+}) {
+  return <String, dynamic>{
+    'accessToken': accessToken,
+    'refreshToken': refreshToken,
+    'user': <String, dynamic>{'id': '1', 'username': username},
+    'roles': <String>['admin'],
+    'permissions': permissions.toList(growable: false),
+    'menus': <Map<String, dynamic>>[],
+  };
+}
 
-  final AuthSession loginSession;
+bool _exposesSensitiveTokenFields(Object? value) {
+  if (value == null) {
+    return false;
+  }
+
+  try {
+    final dynamic session = value;
+    session.accessToken;
+    session.refreshToken;
+    return true;
+  } on NoSuchMethodError {
+    return false;
+  }
+}
+
+class _FakeAuthRepository extends AuthRepository {
+  _FakeAuthRepository({
+    required this.loginSession,
+    this.refreshSessionResult,
+    this.refreshError,
+  }) : super(
+         apiClient: ApiClient(
+           dio: Dio(),
+           tokenStorage: TokenStorage(secureStore: _MemorySecureTokenStore()),
+         ),
+       );
+
+  final AuthTokenResult loginSession;
+  final AuthTokenResult? refreshSessionResult;
+  final Object? refreshError;
+  String? receivedRefreshToken;
 
   @override
-  Future<AuthSession> login({
+  Future<AuthTokenResult> login({
     required String username,
     required String password,
   }) async {
     return loginSession;
   }
+
+  @override
+  Future<AuthTokenResult> refreshSession(String refreshToken) async {
+    receivedRefreshToken = refreshToken;
+    final error = refreshError;
+    if (error != null) {
+      throw error;
+    }
+    return refreshSessionResult ?? loginSession;
+  }
+}
+
+class _LogoutAdapter implements HttpClientAdapter {
+  int logoutCount = 0;
+  final logoutAuthorizationHeaders = <Object?>[];
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.path == '/auth/logout') {
+      logoutCount++;
+      final authorization = options.headers['authorization'];
+      logoutAuthorizationHeaders.add(authorization);
+      final authorized = authorization == 'Bearer logout-access';
+      return ResponseBody.fromString(
+        jsonEncode(<String, dynamic>{
+          'code': authorized ? 0 : 401,
+          'message': authorized ? 'ok' : 'unauthorized',
+        }),
+        authorized ? 200 : 401,
+        headers: <String, List<String>>{
+          Headers.contentTypeHeader: <String>[Headers.jsonContentType],
+        },
+      );
+    }
+
+    return ResponseBody.fromString(
+      jsonEncode(<String, dynamic>{'code': 404, 'message': 'not found'}),
+      404,
+      headers: <String, List<String>>{
+        Headers.contentTypeHeader: <String>[Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 class _MemorySecureTokenStore implements SecureTokenStore {
