@@ -6,12 +6,18 @@ import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_models.
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_user_profile.dart';
 
 void main() {
-  Widget buildProfile(SidebarDisplayMode displayMode) {
+  Widget buildProfile(
+    SidebarDisplayMode displayMode, {
+    VoidCallback? onLogoutRequested,
+  }) {
     return MaterialApp(
       home: Scaffold(
         body: SizedBox(
           width: 240,
-          child: _ProfileUnderTest(displayMode: displayMode),
+          child: _ProfileUnderTest(
+            displayMode: displayMode,
+            onLogoutRequested: onLogoutRequested,
+          ),
         ),
       ),
     );
@@ -145,15 +151,21 @@ void main() {
     );
   });
 
-  testWidgets('用户弹窗底部按钮点击只打印日志', (tester) async {
+  testWidgets('用户弹窗底部按钮触发编辑日志和退出回调', (tester) async {
     final logs = <String>[];
+    var logoutCount = 0;
     final originalDebugPrint = debugPrint;
     debugPrint = (String? message, {int? wrapWidth}) {
       logs.add(message ?? '');
     };
 
     try {
-      await tester.pumpWidget(buildProfile(SidebarDisplayMode.expanded));
+      await tester.pumpWidget(
+        buildProfile(
+          SidebarDisplayMode.expanded,
+          onLogoutRequested: () => logoutCount++,
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const ValueKey('sidebar-user-profile')));
@@ -171,14 +183,16 @@ void main() {
     }
 
     expect(logs, contains('SidebarUserProfile: 修改个人信息'));
-    expect(logs, contains('SidebarUserProfile: 退出登录'));
+    expect(logs, isNot(contains('SidebarUserProfile: 退出登录')));
+    expect(logoutCount, 1);
   });
 }
 
 class _ProfileUnderTest extends StatelessWidget {
-  const _ProfileUnderTest({required this.displayMode});
+  const _ProfileUnderTest({required this.displayMode, this.onLogoutRequested});
 
   final SidebarDisplayMode displayMode;
+  final VoidCallback? onLogoutRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +203,7 @@ class _ProfileUnderTest extends StatelessWidget {
         account: 'silnogm',
       ),
       displayMode: displayMode,
+      onLogoutRequested: onLogoutRequested,
     );
   }
 }

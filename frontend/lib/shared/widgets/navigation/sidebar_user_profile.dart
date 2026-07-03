@@ -131,7 +131,8 @@ class SidebarUserProfile extends StatelessWidget {
                           text: '退出登录',
                           backgroundColor: AppColors.error,
                           onPressed: () {
-                            debugPrint('SidebarUserProfile: 退出登录');
+                            Navigator.of(context).pop();
+                            onLogoutRequested?.call();
                           },
                         ),
                       ),

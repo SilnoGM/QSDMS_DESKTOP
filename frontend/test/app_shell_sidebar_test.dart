@@ -1,10 +1,19 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:qsdms_desktop_frontend/app/layout/app_shell.dart';
 import 'package:qsdms_desktop_frontend/app/theme/app_colors.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/auth_controller.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/models/auth_session.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/repositories/auth_repository.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/storage/preference_storage.dart';
+import 'package:qsdms_desktop_frontend/modules/auth/storage/token_storage.dart';
+import 'package:qsdms_desktop_frontend/shared/services/api_client.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/qsdms_sidebar.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_menu_item.dart';
 import 'package:qsdms_desktop_frontend/shared/widgets/navigation/sidebar_models.dart';
@@ -13,6 +22,13 @@ import 'package:qsdms_desktop_frontend/shared/widgets/window/app_window_title_ba
 void main() {
   const compactSize = Size(1280, 800);
   const standardSize = Size(1440, 900);
+
+  setUp(() {
+    Get.testMode = true;
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
+  tearDown(Get.reset);
 
   Future<void> setDesktopSize(WidgetTester tester, Size size) async {
     tester.view.devicePixelRatio = 1;
@@ -88,6 +104,77 @@ void main() {
     expect(find.text('系统设置'), findsOneWidget);
     expect(find.byKey(const ValueKey('sidebar-notice-image')), findsOneWidget);
     expect(find.text('SilnoGM'), findsOneWidget);
+  });
+
+  testWidgets('登录 session 有后端菜单时侧边栏以后端菜单为准', (tester) async {
+    _putAuthSession(
+      menus: const [
+        {
+          'key': 'dashboard',
+          'title': '工作台',
+          'route': '/',
+          'icon': 'LayoutDashboard',
+          'permissionCode': 'menu:dashboard',
+        },
+        {
+          'key': 'base-data',
+          'title': '基础数据',
+          'route': '/base-data',
+          'icon': 'Database',
+          'permissionCode': 'menu:base-data',
+        },
+      ],
+    );
+
+    await pumpShell(tester, standardSize);
+
+    expect(find.text('工作台'), findsOneWidget);
+    expect(find.text('基础数据'), findsOneWidget);
+    expect(find.text('系统设置'), findsNothing);
+  });
+
+  testWidgets('登录 session 包含 menu:settings 时侧边栏显示系统设置', (tester) async {
+    _putAuthSession(
+      menus: const [
+        {
+          'key': 'dashboard',
+          'title': '工作台',
+          'route': '/',
+          'icon': 'LayoutDashboard',
+          'permissionCode': 'menu:dashboard',
+        },
+        {
+          'key': 'system-settings',
+          'title': '系统设置',
+          'route': '/settings',
+          'icon': 'Settings',
+          'permissionCode': 'menu:settings',
+        },
+      ],
+    );
+
+    await pumpShell(tester, standardSize);
+
+    expect(find.text('系统设置'), findsOneWidget);
+    final settingsIcon = tester.widget<Icon>(
+      find.byIcon(Icons.settings_outlined),
+    );
+    expect(settingsIcon.icon, Icons.settings_outlined);
+  });
+
+  testWidgets('用户区展示 AuthController session 中的用户和角色摘要', (tester) async {
+    _putAuthSession(
+      username: 'operator01',
+      displayName: '王小明',
+      roles: const {'运营管理员'},
+    );
+
+    await pumpShell(tester, standardSize);
+
+    expect(find.text('王小明'), findsOneWidget);
+    expect(find.text('operator01'), findsNothing);
+    expect(find.text('运营管理员'), findsOneWidget);
+    expect(find.text('SilnoGM'), findsNothing);
   });
 
   testWidgets('展开状态不显示 Tooltip，折叠状态保留 Tooltip', (tester) async {
@@ -351,7 +438,7 @@ void main() {
     expect(userProfileInkWell.mouseCursor, SystemMouseCursors.click);
   });
 
-  testWidgets('用户弹窗展示底部操作且按钮暂不触发真实退出', (tester) async {
+  testWidgets('用户弹窗退出按钮触发真实退出回调', (tester) async {
     var logoutCount = 0;
 
     await tester.pumpWidget(
@@ -383,7 +470,7 @@ void main() {
     await tester.tap(find.text('退出登录'));
     await tester.pumpAndSettle();
 
-    expect(logoutCount, 0);
+    expect(logoutCount, 1);
   });
 
   testWidgets('用户区宽度动画中间帧不产生布局溢出', (tester) async {
@@ -585,4 +672,69 @@ void main() {
 
     expect(noticeCardSize.width, greaterThanOrEqualTo(223));
   });
+}
+
+void _putAuthSession({
+  String username = 'admin',
+  String displayName = '管理员',
+  Set<String> roles = const {'系统管理员'},
+  Set<String> permissions = const <String>{},
+  List<Map<String, dynamic>> menus = const [
+    {
+      'key': 'dashboard',
+      'title': '工作台',
+      'route': '/',
+      'icon': 'LayoutDashboard',
+      'permissionCode': 'menu:dashboard',
+    },
+  ],
+}) {
+  final tokenStorage = TokenStorage(secureStore: _MemorySecureTokenStore());
+  final repository = _ShellFakeAuthRepository(tokenStorage);
+  final controller =
+      AuthController(
+          repository: repository,
+          tokenStorage: tokenStorage,
+          preferenceStorage: PreferenceStorage(),
+        )
+        ..session.value = AuthSessionSnapshot(
+          user: AuthUser(
+            id: 'user-1',
+            username: username,
+            displayName: displayName,
+            raw: const <String, dynamic>{},
+          ),
+          roles: roles,
+          permissions: permissions,
+          menus: menus,
+        );
+
+  Get.put<AuthController>(controller, permanent: true);
+}
+
+class _ShellFakeAuthRepository extends AuthRepository {
+  _ShellFakeAuthRepository(TokenStorage tokenStorage)
+    : super(
+        apiClient: ApiClient(dio: Dio(), tokenStorage: tokenStorage),
+      );
+
+  @override
+  Future<void> logout(String? refreshToken) async {}
+}
+
+class _MemorySecureTokenStore implements SecureTokenStore {
+  final values = <String, String>{};
+
+  @override
+  Future<void> delete({required String key}) async {
+    values.remove(key);
+  }
+
+  @override
+  Future<String?> read({required String key}) async => values[key];
+
+  @override
+  Future<void> write({required String key, required String value}) async {
+    values[key] = value;
+  }
 }

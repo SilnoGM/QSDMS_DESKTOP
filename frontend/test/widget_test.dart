@@ -62,8 +62,7 @@ void main() {
     await tester.tap(find.text('系统设置'));
     await tester.pumpAndSettle();
 
-    expect(find.text('当前页面：系统设置'), findsOneWidget);
-    expect(find.text('这里是系统设置页面'), findsOneWidget);
+    expect(find.text('暂无系统设置权限'), findsOneWidget);
 
     await tester.tap(find.text('工作台'));
     await tester.pumpAndSettle();

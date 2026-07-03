@@ -17,11 +17,16 @@ class AuthUser {
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     final username = _readString(json, const ['username', 'account', 'name']);
+    final profile = json['profile'];
+    final profileDisplayName = profile is Map<String, dynamic>
+        ? _readString(profile, const ['displayName', 'realName', 'nickname'])
+        : null;
     return AuthUser(
       id: _readString(json, const ['id', 'userId', 'uuid']) ?? '',
       username: username ?? '',
       displayName:
           _readString(json, const ['displayName', 'realName', 'nickname']) ??
+          profileDisplayName ??
           username ??
           '',
       raw: _sanitizeUserRaw(json),
@@ -38,10 +43,12 @@ class AuthSessionSnapshot {
     required this.roles,
     required this.permissions,
     required this.menus,
+    this.roleLabels = const <String>[],
   });
 
   final AuthUser user;
   final Set<String> roles;
+  final List<String> roleLabels;
   final Set<String> permissions;
   final List<Map<String, dynamic>> menus;
 
@@ -52,6 +59,7 @@ class AuthSessionSnapshot {
           ? AuthUser.fromJson(userData)
           : AuthUser.fromJson(const <String, dynamic>{}),
       roles: _readStringSet(data['roles']),
+      roleLabels: _readRoleLabels(data['roles']),
       permissions: _readStringSet(data['permissions']),
       menus: _readMenus(data['menus']),
     );
@@ -124,6 +132,26 @@ Set<String> _readStringSet(Object? value) {
       .whereType<String>()
       .where((item) => item.isNotEmpty)
       .toSet();
+}
+
+List<String> _readRoleLabels(Object? value) {
+  if (value is! Iterable) {
+    return const <String>[];
+  }
+
+  return value
+      .map((item) {
+        if (item is String) {
+          return item;
+        }
+        if (item is Map<String, dynamic>) {
+          return _readString(item, const ['name', 'code', 'id']);
+        }
+        return null;
+      })
+      .whereType<String>()
+      .where((item) => item.isNotEmpty)
+      .toList(growable: false);
 }
 
 List<Map<String, dynamic>> _readMenus(Object? value) {
