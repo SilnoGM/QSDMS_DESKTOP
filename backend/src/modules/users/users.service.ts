@@ -21,6 +21,9 @@ const USER_INCLUDE = {
   },
 } as const;
 
+const SUPER_ADMIN_GUARD_LOCK_NAMESPACE = 20260703;
+const SUPER_ADMIN_GUARD_LOCK_ID = 1001;
+
 type UserRecord = Prisma.UserGetPayload<{ include: typeof USER_INCLUDE }>;
 
 export type UserProfileResponse = {
@@ -157,6 +160,10 @@ export class UsersService {
     actor: CurrentUserPayload,
   ): Promise<UserResponse> {
     const user = await this.prisma.$transaction(async (tx) => {
+      if (dto.status !== UserStatus.ACTIVE) {
+        await this.acquireSuperAdminGuardLock(tx);
+      }
+
       const current = await this.findUserOrThrow(tx, id);
 
       if (dto.status !== UserStatus.ACTIVE) {
@@ -234,6 +241,8 @@ export class UsersService {
     const roleIds = normalizeIds(dto.roleIds);
 
     const user = await this.prisma.$transaction(async (tx) => {
+      await this.acquireSuperAdminGuardLock(tx);
+
       const current = await this.findUserOrThrow(tx, id);
       const roles = await this.findActiveRolesOrThrow(tx, roleIds);
 
@@ -268,6 +277,17 @@ export class UsersService {
     });
 
     return this.toResponse(user);
+  }
+
+  private async acquireSuperAdminGuardLock(
+    client: Prisma.TransactionClient,
+  ): Promise<void> {
+    // PostgreSQL transaction-scoped advisory lock 会在当前事务结束时自动释放。
+    // 这里串行化所有可能削减有效 SUPER_ADMIN 数量的操作，避免两个并发事务
+    // 分别看到 count=2 后同时禁用/移除不同超级管理员，最终留下 0 个救援账号。
+    await client.$queryRaw`
+      SELECT pg_advisory_xact_lock(${SUPER_ADMIN_GUARD_LOCK_NAMESPACE}, ${SUPER_ADMIN_GUARD_LOCK_ID})
+    `;
   }
 
   private async findUserOrThrow(

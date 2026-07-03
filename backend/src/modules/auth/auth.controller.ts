@@ -4,6 +4,7 @@ import type { Request } from 'express';
 
 import type { ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AuthService } from './auth.service';
+import { ApiPermission } from './decorators/api-permission.decorator';
 import type { AuthRequestContext } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
@@ -84,6 +85,7 @@ export class AuthController {
   }
 
   @Get('session')
+  @ApiPermission('api:auth:session')
   async session(
     @CurrentUser() currentUser: CurrentUserPayload,
   ): Promise<ApiResponse<AuthSessionSnapshot>> {

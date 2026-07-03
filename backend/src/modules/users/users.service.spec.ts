@@ -7,6 +7,7 @@ import { UsersService } from './users.service';
 describe('UsersService', () => {
   let prisma: {
     $transaction: jest.Mock;
+    $queryRaw: jest.Mock;
     user: Record<string, jest.Mock>;
     role: Record<string, jest.Mock>;
     userRole: Record<string, jest.Mock>;
@@ -92,6 +93,31 @@ describe('UsersService', () => {
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
+  it('禁用有效 SUPER_ADMIN 前先在事务内获取 advisory lock', async () => {
+    prisma.user.findUnique.mockResolvedValue(createEffectiveSuperAdmin());
+    prisma.user.count.mockResolvedValue(2);
+    prisma.user.update.mockResolvedValue(
+      createEffectiveSuperAdmin({ status: UserStatus.DISABLED }),
+    );
+    prisma.auditLog.create.mockResolvedValue({});
+
+    await service.updateStatus(
+      'target-user',
+      { status: UserStatus.DISABLED },
+      createActor(),
+    );
+
+    expect(getRawSqlText(prisma.$queryRaw.mock.calls[0]?.[0])).toContain(
+      'pg_advisory_xact_lock',
+    );
+    expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.user.count.mock.invocationCallOrder[0],
+    );
+    expect(prisma.user.count.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.user.update.mock.invocationCallOrder[0],
+    );
+  });
+
   it('分配角色不能移除最后有效 SUPER_ADMIN 绑定', async () => {
     prisma.user.findUnique.mockResolvedValue(createEffectiveSuperAdmin());
     prisma.user.count.mockResolvedValue(1);
@@ -109,6 +135,46 @@ describe('UsersService', () => {
       status: 403,
     });
     expect(prisma.userRole.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('移除有效 SUPER_ADMIN 绑定前先在事务内获取 advisory lock', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce(createEffectiveSuperAdmin())
+      .mockResolvedValueOnce(
+        createUserRecord({
+          userRoles: [
+            {
+              role: createRole({
+                id: 2,
+                code: 'ADMIN',
+                isSystem: false,
+              }),
+            },
+          ],
+        }),
+      );
+    prisma.role.findMany.mockResolvedValue([
+      createRole({ id: 2, code: 'ADMIN', isSystem: false }),
+    ]);
+    prisma.role.findUnique.mockResolvedValue(
+      createRole({ id: 1, code: 'SUPER_ADMIN', isActive: true }),
+    );
+    prisma.user.count.mockResolvedValue(2);
+    prisma.userRole.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.userRole.createMany.mockResolvedValue({ count: 1 });
+    prisma.auditLog.create.mockResolvedValue({});
+
+    await service.assignRoles('target-user', { roleIds: [2] }, createActor());
+
+    expect(getRawSqlText(prisma.$queryRaw.mock.calls[0]?.[0])).toContain(
+      'pg_advisory_xact_lock',
+    );
+    expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.user.count.mock.invocationCallOrder[0],
+    );
+    expect(prisma.user.count.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.userRole.deleteMany.mock.invocationCallOrder[0],
+    );
   });
 
   it('重置密码递增 tokenVersion 且响应不返回 hash', async () => {
@@ -144,6 +210,7 @@ describe('UsersService', () => {
 function createPrismaMock() {
   return {
     $transaction: jest.fn(),
+    $queryRaw: jest.fn().mockResolvedValue([]),
     user: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
@@ -163,6 +230,14 @@ function createPrismaMock() {
       create: jest.fn(),
     },
   };
+}
+
+function getRawSqlText(rawSql: unknown): string {
+  if (Array.isArray(rawSql)) {
+    return rawSql.join('?');
+  }
+
+  return String(rawSql);
 }
 
 function createActor() {
