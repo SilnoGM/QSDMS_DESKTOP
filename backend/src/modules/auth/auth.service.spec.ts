@@ -524,16 +524,30 @@ describe('AuthService', () => {
   });
 
   it('logout 带有效 refreshToken 只撤销当前用户该 refresh session', async () => {
+    const refreshSecret = 'valid-secret';
+    const refreshTokenHash = await argon2.hash(refreshSecret);
+
+    prisma.refreshSession.findUnique.mockResolvedValue(
+      createRefreshSessionRecord({
+        refreshTokenHash,
+      }),
+    );
     prisma.refreshSession.updateMany.mockResolvedValue({ count: 1 });
 
     await expect(
       authService.logout(createCurrentUser(), {
-        refreshToken: 'session_current.valid-secret',
+        refreshToken: `session_current.${refreshSecret}`,
       }),
     ).resolves.toEqual({
       success: true,
     });
 
+    expect(prisma.refreshSession.findUnique).toHaveBeenCalledTimes(1);
+    expect(prisma.refreshSession.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'session_current' },
+      }),
+    );
     expect(prisma.refreshSession.updateMany).toHaveBeenCalledTimes(1);
     expect(prisma.refreshSession.updateMany).toHaveBeenCalledWith({
       where: {
@@ -560,6 +574,48 @@ describe('AuthService', () => {
       status: 401,
     });
 
+    expect(prisma.refreshSession.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('logout 带格式合法但不存在的 refreshToken 返回 TOKEN_REVOKED 且不撤销当前用户全部 sessions', async () => {
+    prisma.refreshSession.findUnique.mockResolvedValue(null);
+
+    await expect(
+      authService.logout(createCurrentUser(), {
+        refreshToken: 'unknown_session.bad-secret',
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'TOKEN_REVOKED',
+        data: null,
+      },
+      status: 401,
+    });
+
+    expect(prisma.refreshSession.findUnique).toHaveBeenCalledTimes(1);
+    expect(prisma.refreshSession.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('logout 带格式合法但 secret 不匹配的 refreshToken 返回 TOKEN_REVOKED 且不撤销当前用户全部 sessions', async () => {
+    prisma.refreshSession.findUnique.mockResolvedValue(
+      createRefreshSessionRecord({
+        refreshTokenHash: await argon2.hash('expected-secret'),
+      }),
+    );
+
+    await expect(
+      authService.logout(createCurrentUser(), {
+        refreshToken: 'session_current.bad-secret',
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'TOKEN_REVOKED',
+        data: null,
+      },
+      status: 401,
+    });
+
+    expect(prisma.refreshSession.findUnique).toHaveBeenCalledTimes(1);
     expect(prisma.refreshSession.updateMany).not.toHaveBeenCalled();
   });
 });
@@ -594,6 +650,18 @@ function createUserRecord(overrides: Record<string, unknown> = {}) {
         role: createRole(),
       }),
     ],
+    ...overrides,
+  };
+}
+
+function createRefreshSessionRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'session_current',
+    userId: 'user-1',
+    refreshTokenHash: 'hashed-refresh-token',
+    expiresAt: new Date(Date.now() + 60_000),
+    revokedAt: null,
+    user: createUserRecord(),
     ...overrides,
   };
 }

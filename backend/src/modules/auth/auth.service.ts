@@ -263,9 +263,40 @@ export class AuthService {
     const revokedAt = new Date();
 
     if (parsedToken) {
-      await this.prisma.refreshSession.updateMany({
+      const refreshSession = await this.findRefreshSession(
+        parsedToken.sessionId,
+      );
+
+      if (
+        !refreshSession ||
+        refreshSession.userId !== currentUser.id ||
+        refreshSession.revokedAt
+      ) {
+        throwAuthException(
+          'TOKEN_REVOKED',
+          'Refresh token has been revoked.',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const secretMatched = await argon2.verify(
+        refreshSession.refreshTokenHash,
+        parsedToken.secret,
+      );
+
+      if (!secretMatched) {
+        throwAuthException(
+          'TOKEN_REVOKED',
+          'Refresh token has been revoked.',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      // 显式 refresh token 退出必须先验证该 token 仍然代表当前用户的有效 session；
+      // 这里再次用 revokedAt 做 CAS 条件，避免校验后被并发请求撤销时仍返回成功。
+      const revokeResult = await this.prisma.refreshSession.updateMany({
         where: {
-          id: parsedToken.sessionId,
+          id: refreshSession.id,
           userId: currentUser.id,
           revokedAt: null,
         },
@@ -273,6 +304,14 @@ export class AuthService {
           revokedAt,
         },
       });
+
+      if (revokeResult.count !== 1) {
+        throwAuthException(
+          'TOKEN_REVOKED',
+          'Refresh token has been revoked.',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
     } else {
       // 未提供 refresh token 时执行“退出当前用户所有会话”，但仍保持统一成功响应，
       // 避免向调用方泄露具体 refresh session 是否存在。
