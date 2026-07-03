@@ -237,6 +237,26 @@ void main() {
     expect(macWindow, contains('DispatchQueue.main.async'));
   });
 
+  test('macOS 沙盒允许访问本地后端 API', () {
+    final debugEntitlements = File(
+      'macos/Runner/DebugProfile.entitlements',
+    ).readAsStringSync();
+    final releaseEntitlements = File(
+      'macos/Runner/Release.entitlements',
+    ).readAsStringSync();
+
+    expect(
+      debugEntitlements,
+      contains('<key>com.apple.security.network.client</key>'),
+    );
+    expect(debugEntitlements, contains('<true/>'));
+    expect(
+      releaseEntitlements,
+      contains('<key>com.apple.security.network.client</key>'),
+    );
+    expect(releaseEntitlements, contains('<true/>'));
+  });
+
   test('桌面 runner 默认尺寸与 window_manager 配置保持一致', () {
     final macXib = File(
       'macos/Runner/Base.lproj/MainMenu.xib',
