@@ -24,7 +24,7 @@ class AuthUser {
           _readString(json, const ['displayName', 'realName', 'nickname']) ??
           username ??
           '',
-      raw: Map<String, dynamic>.unmodifiable(json),
+      raw: _sanitizeUserRaw(json),
     );
   }
 }
@@ -135,4 +135,24 @@ List<Map<String, dynamic>> _readMenus(Object? value) {
       .whereType<Map<String, dynamic>>()
       .map(Map<String, dynamic>.unmodifiable)
       .toList(growable: false);
+}
+
+Map<String, dynamic> _sanitizeUserRaw(Map<String, dynamic> json) {
+  final filtered = <String, dynamic>{};
+  for (final entry in json.entries) {
+    if (_isSensitiveUserRawKey(entry.key)) {
+      continue;
+    }
+    filtered[entry.key] = entry.value;
+  }
+  return Map<String, dynamic>.unmodifiable(filtered);
+}
+
+bool _isSensitiveUserRawKey(String key) {
+  // 后端 user 对象可能追加临时认证字段；raw 会进入全局 session 快照，
+  // 因此按字段语义剔除 token、password、hash 类数据，避免 UI 层误读或泄漏。
+  final normalized = key.toLowerCase();
+  return normalized.contains('token') ||
+      normalized.contains('password') ||
+      normalized.contains('hash');
 }

@@ -73,6 +73,7 @@ class AuthController extends GetxController {
         refreshToken: nextSession.refreshToken,
       );
       session.value = nextSession.snapshot;
+      repository.apiClient.markAuthenticated();
       await _saveRememberPreference(
         username: username,
         shouldRemember: rememberLogin,
@@ -105,6 +106,7 @@ class AuthController extends GetxController {
         refreshToken: nextSession.refreshToken,
       );
       session.value = nextSession.snapshot;
+      repository.apiClient.markAuthenticated();
     } catch (_) {
       await tokenStorage.clear();
       session.value = null;
@@ -133,6 +135,7 @@ class AuthController extends GetxController {
 
   void applyRefreshedSessionData(Map<String, dynamic> data) {
     session.value = AuthTokenResult.fromResponseData(data).snapshot;
+    repository.apiClient.markAuthenticated();
   }
 
   bool can(String permission) => permissions.contains(permission);

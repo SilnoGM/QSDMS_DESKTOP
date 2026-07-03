@@ -98,6 +98,43 @@ void main() {
     expect(await tokenStorage.readRefreshToken(), 'refresh-token');
   });
 
+  test('后端 user 子对象的敏感字段不会进入 session user raw', () {
+    final controller = _buildController();
+
+    controller.applyRefreshedSessionData(
+      _sessionResponseData(
+        accessToken: 'callback-access',
+        refreshToken: 'callback-refresh',
+        username: 'callback-admin',
+        permissions: {'system:callback'},
+        userOverrides: const <String, dynamic>{
+          'accessToken': 'nested-access',
+          'RefreshToken': 'nested-refresh',
+          'TOKEN': 'nested-token',
+          'password': 'secret',
+          'PasswordHash': 'hash',
+          'refreshTokenHash': 'refresh-hash',
+          'email': 'admin@example.com',
+        },
+      ),
+    );
+
+    final raw = controller.session.value?.user.raw;
+    final normalizedRawKeys = raw?.keys.map((key) => key.toLowerCase()).toSet();
+
+    expect(raw, containsPair('email', 'admin@example.com'));
+    for (final sensitiveKey in <String>{
+      'accesstoken',
+      'refreshtoken',
+      'token',
+      'password',
+      'passwordhash',
+      'refreshtokenhash',
+    }) {
+      expect(normalizedRawKeys, isNot(contains(sensitiveKey)));
+    }
+  });
+
   test('restoreSession 成功保存新 token 和无 token snapshot', () async {
     final secureStore = _MemorySecureTokenStore();
     final tokenStorage = TokenStorage(secureStore: secureStore);
@@ -219,11 +256,16 @@ Map<String, dynamic> _sessionResponseData({
   required String refreshToken,
   required String username,
   required Set<String> permissions,
+  Map<String, dynamic> userOverrides = const <String, dynamic>{},
 }) {
   return <String, dynamic>{
     'accessToken': accessToken,
     'refreshToken': refreshToken,
-    'user': <String, dynamic>{'id': '1', 'username': username},
+    'user': <String, dynamic>{
+      'id': '1',
+      'username': username,
+      ...userOverrides,
+    },
     'roles': <String>['admin'],
     'permissions': permissions.toList(growable: false),
     'menus': <Map<String, dynamic>>[],

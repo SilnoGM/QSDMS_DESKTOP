@@ -115,6 +115,45 @@ void main() {
     expect(await tokenStorage.readRefreshToken(), isNull);
     expect(unauthorizedCount, 1);
   });
+
+  test('新认证周期重置 unauthorized 闩锁，后续 refresh 失败仍再次回调', () async {
+    final secureStore = _MemorySecureTokenStore();
+    final tokenStorage = TokenStorage(secureStore: secureStore);
+    await tokenStorage.saveTokens(
+      accessToken: 'old-access',
+      refreshToken: 'old-refresh',
+    );
+    final adapter = _RefreshAdapter(refreshSucceeds: false);
+    final dio = Dio(BaseOptions(baseUrl: 'http://localhost:3000/api'))
+      ..httpClientAdapter = adapter;
+    var unauthorizedCount = 0;
+
+    final client = ApiClient(
+      dio: dio,
+      tokenStorage: tokenStorage,
+      onUnauthorized: () => unauthorizedCount++,
+    );
+
+    await expectLater(
+      client.dio.get<Map<String, dynamic>>('/protected'),
+      throwsA(isA<DioException>()),
+    );
+    expect(unauthorizedCount, 1);
+
+    await tokenStorage.saveTokens(
+      accessToken: 'relogin-access',
+      refreshToken: 'relogin-refresh',
+    );
+    client.markAuthenticated();
+
+    await expectLater(
+      client.dio.get<Map<String, dynamic>>('/protected'),
+      throwsA(isA<DioException>()),
+    );
+
+    expect(adapter.refreshCount, 2);
+    expect(unauthorizedCount, 2);
+  });
 }
 
 class _AuthEndpointBoundaryAdapter implements HttpClientAdapter {

@@ -40,6 +40,21 @@ class ApiClient {
   Future<void>? _refreshFuture;
   bool _unauthorizedNotified = false;
 
+  /// 标记进入新的有效认证周期。
+  ///
+  /// 登录成功、冷启动 refresh 成功、拦截器 refresh 成功后都需要调用该方法，
+  /// 避免上一轮 refresh 失败留下的 unauthorized 闩锁阻止后续周期的回调。
+  void markAuthenticated() {
+    resetUnauthorizedNotification();
+  }
+
+  /// 重置 unauthorized 通知闩锁。
+  ///
+  /// 该方法只重置通知状态，不读写 token，也不会触发任何网络请求。
+  void resetUnauthorizedNotification() {
+    _unauthorizedNotified = false;
+  }
+
   void _installAuthInterceptor() {
     dio.interceptors.add(
       InterceptorsWrapper(
@@ -127,7 +142,7 @@ class ApiClient {
       accessToken: accessToken,
       refreshToken: nextRefreshToken,
     );
-    _unauthorizedNotified = false;
+    markAuthenticated();
     await onRefreshData?.call(data);
   }
 
