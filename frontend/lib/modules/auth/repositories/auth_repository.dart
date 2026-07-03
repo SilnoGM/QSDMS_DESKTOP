@@ -90,7 +90,7 @@ class AuthRepository {
     }
 
     final code = responseBody['code'];
-    final success = code == null || code == 0 || code == 200 || code == '0';
+    final success = _isSuccessCode(code);
     if (!success) {
       final message = responseBody['message'];
       throw AuthRepositoryException(
@@ -99,6 +99,15 @@ class AuthRepository {
     }
 
     return responseBody['data'];
+  }
+
+  bool _isSuccessCode(Object? code) {
+    if (code == null || code == 0 || code == 200) {
+      return true;
+    }
+
+    final text = code.toString();
+    return text == '0' || text == '200' || text.endsWith('_SUCCESS');
   }
 }
 

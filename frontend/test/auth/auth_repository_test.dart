@@ -9,6 +9,21 @@ import 'package:qsdms_desktop_frontend/modules/auth/storage/token_storage.dart';
 import 'package:qsdms_desktop_frontend/shared/services/api_client.dart';
 
 void main() {
+  test('login 接受后端 *_SUCCESS 统一响应码', () async {
+    final repository = _buildRepository(_AuthRepositoryAdapter());
+
+    final result = await repository.login(
+      username: 'admin',
+      password: 'admin',
+    );
+
+    expect(result.accessToken, 'access-token');
+    expect(result.refreshToken, 'refresh-token');
+    expect(result.snapshot.user.username, 'admin');
+    expect(result.snapshot.roles, {'SUPER_ADMIN'});
+    expect(result.snapshot.permissions, {'menu:dashboard'});
+  });
+
   test('fetchSession 解析不含 token 的 session snapshot', () async {
     final repository = _buildRepository(_AuthRepositoryAdapter());
 
@@ -47,6 +62,23 @@ class _AuthRepositoryAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    if (options.path == '/auth/login') {
+      return _jsonResponse(<String, dynamic>{
+        'code': 'AUTH_LOGIN_SUCCESS',
+        'message': 'login succeeded',
+        'data': <String, dynamic>{
+          'accessToken': 'access-token',
+          'refreshToken': 'refresh-token',
+          'user': <String, dynamic>{'id': '1', 'username': 'admin'},
+          'roles': <String>['SUPER_ADMIN'],
+          'permissions': <String>['menu:dashboard'],
+          'menus': <Map<String, dynamic>>[
+            <String, dynamic>{'key': 'dashboard', 'title': '工作台'},
+          ],
+        },
+      });
+    }
+
     if (options.path == '/auth/session') {
       return _jsonResponse(<String, dynamic>{
         'code': 0,
