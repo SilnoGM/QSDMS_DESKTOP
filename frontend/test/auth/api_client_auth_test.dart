@@ -116,6 +116,45 @@ void main() {
     expect(unauthorizedCount, 1);
   });
 
+  test('refresh 成功但重放原请求返回 500 时保留 token 且不触发 unauthorized', () async {
+    final secureStore = _MemorySecureTokenStore();
+    final tokenStorage = TokenStorage(secureStore: secureStore);
+    await tokenStorage.saveTokens(
+      accessToken: 'old-access',
+      refreshToken: 'old-refresh',
+    );
+    final adapter = _RefreshAdapter(
+      refreshSucceeds: true,
+      replayFailureStatusCode: 500,
+    );
+    final dio = Dio(BaseOptions(baseUrl: 'http://localhost:3000/api'))
+      ..httpClientAdapter = adapter;
+    var unauthorizedCount = 0;
+
+    final client = ApiClient(
+      dio: dio,
+      tokenStorage: tokenStorage,
+      onUnauthorized: () => unauthorizedCount++,
+    );
+
+    await expectLater(
+      client.dio.get<Map<String, dynamic>>('/protected'),
+      throwsA(
+        isA<DioException>().having(
+          (error) => error.response?.statusCode,
+          'statusCode',
+          500,
+        ),
+      ),
+    );
+
+    expect(adapter.refreshCount, 1);
+    expect(adapter.protectedCount, 2);
+    expect(tokenStorage.accessToken, 'new-access');
+    expect(await tokenStorage.readRefreshToken(), 'new-refresh');
+    expect(unauthorizedCount, 0);
+  });
+
   test('新认证周期重置 unauthorized 闩锁，后续 refresh 失败仍再次回调', () async {
     final secureStore = _MemorySecureTokenStore();
     final tokenStorage = TokenStorage(secureStore: secureStore);
@@ -211,9 +250,13 @@ class _AuthEndpointBoundaryAdapter implements HttpClientAdapter {
 }
 
 class _RefreshAdapter implements HttpClientAdapter {
-  _RefreshAdapter({required this.refreshSucceeds});
+  _RefreshAdapter({
+    required this.refreshSucceeds,
+    this.replayFailureStatusCode,
+  });
 
   final bool refreshSucceeds;
+  final int? replayFailureStatusCode;
   int refreshCount = 0;
   int protectedCount = 0;
 
@@ -255,6 +298,16 @@ class _RefreshAdapter implements HttpClientAdapter {
         throw StateError('测试不允许把 token 写入认证失败相关 header');
       }
       if (options.headers['authorization'] == 'Bearer new-access') {
+        final failureStatusCode = replayFailureStatusCode;
+        if (failureStatusCode != null) {
+          return _jsonResponse(
+            statusCode: failureStatusCode,
+            body: <String, dynamic>{
+              'code': failureStatusCode,
+              'message': 'replay failed',
+            },
+          );
+        }
         return _jsonResponse(
           statusCode: 200,
           body: <String, dynamic>{

@@ -79,11 +79,19 @@ class ApiClient {
 
           try {
             await _refreshTokens();
-            final response = await _replayRequest(error.requestOptions);
-            handler.resolve(response);
           } catch (_) {
             await _handleRefreshFailure();
             handler.next(error);
+            return;
+          }
+
+          try {
+            final response = await _replayRequest(error.requestOptions);
+            handler.resolve(response);
+          } on DioException catch (replayError) {
+            // refresh 成功代表认证周期仍然有效；重放失败属于原业务请求结果，
+            // 必须原样交回调用方，不能清理 token 或触发 unauthorized。
+            handler.next(replayError);
           }
         },
       ),
