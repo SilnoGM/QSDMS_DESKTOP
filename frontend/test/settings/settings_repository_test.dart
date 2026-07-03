@@ -48,6 +48,21 @@ void main() {
     });
   });
 
+  test('updateUser 使用 PATCH /users/:id 并提交用户名和显示名', () async {
+    final adapter = _CaptureWriteAdapter();
+    final repository = _buildRepository(adapter);
+
+    await repository.updateUser(
+      id: 'user-1',
+      username: 'admin2',
+      displayName: '管理员2',
+    );
+
+    expect(adapter.single.method, 'PATCH');
+    expect(adapter.single.path, '/users/user-1');
+    expect(adapter.single.body, {'username': 'admin2', 'displayName': '管理员2'});
+  });
+
   test('updateUserStatus 使用 PATCH /users/:id/status 并提交 status', () async {
     final adapter = _CaptureWriteAdapter();
     final repository = _buildRepository(adapter);
@@ -58,6 +73,22 @@ void main() {
     expect(adapter.single.path, '/users/user-1/status');
     expect(adapter.single.body, {'status': 'DISABLED'});
   });
+
+  test(
+    'resetUserPassword 使用 POST /users/:id/reset-password 并提交 password',
+    () async {
+      final adapter = _CaptureWriteAdapter();
+      final repository = _buildRepository(adapter);
+      const password = 'new-password-123';
+
+      await repository.resetUserPassword(id: 'user-1', password: password);
+
+      expect(adapter.single.method, 'POST');
+      expect(adapter.single.path, '/users/user-1/reset-password');
+      expect(adapter.single.body.keys, unorderedEquals(['password']));
+      expect(adapter.single.body['password'] == password, isTrue);
+    },
+  );
 
   test('assignUserRoles 使用 PUT /users/:id/roles 并提交 roleIds', () async {
     final adapter = _CaptureWriteAdapter();
