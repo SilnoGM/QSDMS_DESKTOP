@@ -112,9 +112,15 @@ class AppShell extends StatelessWidget {
   }
 
   List<SidebarMenuItemConfig> _resolveMenuItems(AuthSessionSnapshot? session) {
-    final rawMenus = session?.menus ?? const <Map<String, dynamic>>[];
-    if (rawMenus.isEmpty) {
+    if (session == null) {
       return QsdmsSidebarDefaults.menuItems;
+    }
+
+    // 已登录 session 的菜单必须以后端返回为准。空菜单代表后端未授权任何入口，
+    // 不能回退默认菜单，否则会绕过 `menu:settings` 等菜单权限控制。
+    final rawMenus = session.menus;
+    if (rawMenus.isEmpty) {
+      return const <SidebarMenuItemConfig>[];
     }
 
     final indexedMenus = rawMenus.indexed

@@ -63,6 +63,117 @@ void main() {
     expect(find.text('用户管理'), findsOneWidget);
     expect(find.text('创建用户'), findsOneWidget);
   });
+
+  testWidgets('只有 system:user:list 时隐藏用户行操作按钮', (tester) async {
+    await _pumpSettingsPage(tester, permissions: const {'system:user:list'});
+
+    expect(find.text('用户管理'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, '编辑'), findsNothing);
+    expect(find.widgetWithText(PopupMenuButton<String>, '状态'), findsNothing);
+    expect(find.widgetWithText(TextButton, '重置密码'), findsNothing);
+    expect(find.widgetWithText(TextButton, '分配角色'), findsNothing);
+  });
+
+  testWidgets('system:user:update 控制用户编辑按钮', (tester) async {
+    await _pumpSettingsPage(
+      tester,
+      permissions: const {'system:user:list', 'system:user:update'},
+    );
+
+    expect(find.widgetWithText(TextButton, '编辑'), findsOneWidget);
+    expect(find.widgetWithText(PopupMenuButton<String>, '状态'), findsNothing);
+    expect(find.widgetWithText(TextButton, '重置密码'), findsNothing);
+    expect(find.widgetWithText(TextButton, '分配角色'), findsNothing);
+  });
+
+  testWidgets('system:user:disable 控制用户状态按钮', (tester) async {
+    await _pumpSettingsPage(
+      tester,
+      permissions: const {'system:user:list', 'system:user:disable'},
+    );
+
+    expect(find.widgetWithText(TextButton, '编辑'), findsNothing);
+    expect(find.widgetWithText(PopupMenuButton<String>, '状态'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, '重置密码'), findsNothing);
+    expect(find.widgetWithText(TextButton, '分配角色'), findsNothing);
+  });
+
+  testWidgets('system:user:reset-password 控制重置密码按钮', (tester) async {
+    await _pumpSettingsPage(
+      tester,
+      permissions: const {'system:user:list', 'system:user:reset-password'},
+    );
+
+    expect(find.widgetWithText(TextButton, '编辑'), findsNothing);
+    expect(find.widgetWithText(PopupMenuButton<String>, '状态'), findsNothing);
+    expect(find.widgetWithText(TextButton, '重置密码'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, '分配角色'), findsNothing);
+  });
+
+  testWidgets('system:user:assign-roles 控制分配角色按钮', (tester) async {
+    await _pumpSettingsPage(
+      tester,
+      permissions: const {'system:user:list', 'system:user:assign-roles'},
+    );
+
+    expect(find.widgetWithText(TextButton, '编辑'), findsNothing);
+    expect(find.widgetWithText(PopupMenuButton<String>, '状态'), findsNothing);
+    expect(find.widgetWithText(TextButton, '重置密码'), findsNothing);
+    expect(find.widgetWithText(TextButton, '分配角色'), findsOneWidget);
+  });
+
+  testWidgets('只有 system:role:list 时隐藏角色管理操作按钮', (tester) async {
+    await _pumpSettingsPage(tester, permissions: const {'system:role:list'});
+
+    expect(find.text('角色管理'), findsOneWidget);
+    expect(find.text('创建角色'), findsNothing);
+    expect(find.widgetWithText(TextButton, '编辑'), findsNothing);
+    expect(find.widgetWithText(TextButton, '停用'), findsNothing);
+    expect(find.widgetWithText(TextButton, '分配权限'), findsNothing);
+  });
+
+  testWidgets('system:role:create 控制创建角色按钮', (tester) async {
+    await _pumpSettingsPage(
+      tester,
+      permissions: const {'system:role:list', 'system:role:create'},
+    );
+
+    expect(find.text('创建角色'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, '编辑'), findsNothing);
+    expect(find.widgetWithText(TextButton, '停用'), findsNothing);
+    expect(find.widgetWithText(TextButton, '分配权限'), findsNothing);
+  });
+
+  testWidgets('system:role:update 控制角色编辑并禁用系统角色停用', (tester) async {
+    await _pumpSettingsPage(
+      tester,
+      permissions: const {'system:role:list', 'system:role:update'},
+    );
+
+    expect(find.widgetWithText(TextButton, '编辑'), findsOneWidget);
+    expect(find.widgetWithText(TextButton, '停用'), findsOneWidget);
+    expect(_textButtonEnabled(tester, '停用'), isFalse);
+    expect(find.widgetWithText(TextButton, '分配权限'), findsNothing);
+  });
+
+  testWidgets('system:role:assign-permissions 控制分配权限并禁用系统角色编辑', (tester) async {
+    await _pumpSettingsPage(
+      tester,
+      permissions: const {'system:role:list', 'system:role:assign-permissions'},
+    );
+
+    expect(find.widgetWithText(TextButton, '编辑'), findsNothing);
+    expect(find.widgetWithText(TextButton, '停用'), findsNothing);
+    expect(find.widgetWithText(TextButton, '分配权限'), findsOneWidget);
+    expect(_textButtonEnabled(tester, '分配权限'), isFalse);
+  });
+}
+
+bool _textButtonEnabled(WidgetTester tester, String label) {
+  final button = tester.widget<TextButton>(
+    find.widgetWithText(TextButton, label),
+  );
+  return button.onPressed != null;
 }
 
 Future<void> _pumpSettingsPage(

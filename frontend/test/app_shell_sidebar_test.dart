@@ -133,6 +133,16 @@ void main() {
     expect(find.text('系统设置'), findsNothing);
   });
 
+  testWidgets('登录 session 菜单为空时侧边栏不回退默认系统设置', (tester) async {
+    _putAuthSession(menus: const <Map<String, dynamic>>[]);
+
+    await pumpShell(tester, standardSize);
+
+    expect(find.text('工作台'), findsNothing);
+    expect(find.text('基础数据'), findsNothing);
+    expect(find.text('系统设置'), findsNothing);
+  });
+
   testWidgets('登录 session 包含 menu:settings 时侧边栏显示系统设置', (tester) async {
     _putAuthSession(
       menus: const [
