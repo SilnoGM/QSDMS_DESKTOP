@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../../database/prisma.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { ApiPermissionGuard } from './guards/api-permission.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
@@ -13,9 +14,14 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
   providers: [
     AuthService,
     JwtAuthGuard,
+    ApiPermissionGuard,
     {
       provide: APP_GUARD,
       useExisting: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useExisting: ApiPermissionGuard,
     },
   ],
   exports: [AuthService],

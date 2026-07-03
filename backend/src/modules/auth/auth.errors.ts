@@ -3,6 +3,8 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { ApiResponse } from '../../common/interfaces/api-response.interface';
 
 export type AuthErrorCode =
+  | 'BAD_REQUEST'
+  | 'NOT_FOUND'
   | 'UNAUTHORIZED'
   | 'TOKEN_EXPIRED'
   | 'TOKEN_REVOKED'
