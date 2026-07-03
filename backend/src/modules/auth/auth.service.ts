@@ -98,7 +98,7 @@ const MENU_DEFINITIONS: readonly AuthMenu[] = [
   {
     key: 'dashboard',
     title: '工作台',
-    route: '/dashboard',
+    route: '/',
     icon: 'LayoutDashboard',
     permissionCode: 'menu:dashboard',
     sortOrder: 10,
@@ -116,7 +116,7 @@ const MENU_DEFINITIONS: readonly AuthMenu[] = [
   {
     key: 'system-settings',
     title: '系统设置',
-    route: '/system',
+    route: '/settings',
     icon: 'Settings',
     permissionCode: 'menu:settings',
     sortOrder: 30,
@@ -218,14 +218,26 @@ export class AuthService {
     );
     const nextRefreshTokenHash = await argon2.hash(nextRefreshSecret);
 
-    // refresh token 使用同一个 sessionId 轮换 secret；数据库只保存最新 secret 的 hash，
-    // 因此旧 refresh token 会在下一次校验时立即失效。
-    await this.prisma.refreshSession.update({
-      where: { id: refreshSession.id },
+    // refresh token 采用单次消费语义：只有数据库中的 hash 仍等于本次校验过的旧 hash，
+    // 且 session 尚未撤销时，才允许写入新 hash，避免并发请求同时消费同一个旧 token。
+    const rotationResult = await this.prisma.refreshSession.updateMany({
+      where: {
+        id: refreshSession.id,
+        refreshTokenHash: refreshSession.refreshTokenHash,
+        revokedAt: null,
+      },
       data: {
         refreshTokenHash: nextRefreshTokenHash,
       },
     });
+
+    if (rotationResult.count !== 1) {
+      throwAuthException(
+        'TOKEN_REVOKED',
+        'Refresh token has been revoked.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
 
     return {
       accessToken: await this.signAccessToken(refreshSession.user),
@@ -244,6 +256,7 @@ export class AuthService {
     const parsedToken = dto.refreshToken
       ? this.tryParseRefreshToken(dto.refreshToken)
       : null;
+    const revokedAt = new Date();
 
     if (parsedToken) {
       await this.prisma.refreshSession.updateMany({
@@ -253,7 +266,19 @@ export class AuthService {
           revokedAt: null,
         },
         data: {
-          revokedAt: new Date(),
+          revokedAt,
+        },
+      });
+    } else {
+      // 未提供 refresh token 时执行“退出当前用户所有会话”，但仍保持统一成功响应，
+      // 避免向调用方泄露具体 refresh session 是否存在。
+      await this.prisma.refreshSession.updateMany({
+        where: {
+          userId: currentUser.id,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt,
         },
       });
     }

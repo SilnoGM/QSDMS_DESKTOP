@@ -138,7 +138,7 @@ describe('AuthService', () => {
       {
         key: 'dashboard',
         title: '工作台',
-        route: '/dashboard',
+        route: '/',
         icon: 'LayoutDashboard',
         permissionCode: 'menu:dashboard',
         sortOrder: 10,
@@ -199,6 +199,65 @@ describe('AuthService', () => {
     });
   });
 
+  it('菜单 route 与前端 AppRoutes 保持一致', async () => {
+    const activeUser = createUserRecord({
+      passwordHash,
+      userRoles: [
+        createUserRole({
+          role: createRole({
+            rolePermissions: [
+              createRolePermission({
+                permission: createPermission({
+                  code: 'menu:dashboard',
+                  name: '工作台菜单',
+                  type: 'MENU',
+                  module: 'dashboard',
+                  sortOrder: 10,
+                }),
+              }),
+              createRolePermission({
+                permission: createPermission({
+                  id: 2,
+                  code: 'menu:base-data',
+                  name: '基础数据菜单',
+                  type: 'MENU',
+                  module: 'base-data',
+                  sortOrder: 20,
+                }),
+              }),
+              createRolePermission({
+                permission: createPermission({
+                  id: 3,
+                  code: 'menu:settings',
+                  name: '系统设置菜单',
+                  type: 'MENU',
+                  module: 'system',
+                  sortOrder: 30,
+                }),
+              }),
+            ],
+          }),
+        }),
+      ],
+    });
+
+    prisma.user.findUnique.mockResolvedValue(activeUser);
+
+    const snapshot = await authService.getSessionSnapshot('user-1');
+    const routesByPermission = Object.fromEntries(
+      snapshot.menus.map((menu) => [
+        menu.permissionCode.replace('menu:', ''),
+        menu.route,
+      ]),
+    );
+
+    expect(routesByPermission).toEqual({
+      dashboard: '/',
+      'base-data': '/base-data',
+      settings: '/settings',
+    });
+  });
+
   it('refresh token 轮换后旧 token 再刷新失败', async () => {
     const activeUser = createUserRecord({
       passwordHash,
@@ -237,13 +296,21 @@ describe('AuthService', () => {
     prisma.refreshSession.findUnique.mockImplementation(() =>
       Promise.resolve(refreshSessionRecord),
     );
-    prisma.refreshSession.update.mockImplementation(({ data }) => {
+    prisma.refreshSession.updateMany.mockImplementation(({ data, where }) => {
+      if (
+        refreshSessionRecord?.id !== where.id ||
+        refreshSessionRecord.refreshTokenHash !== where.refreshTokenHash ||
+        refreshSessionRecord.revokedAt !== where.revokedAt
+      ) {
+        return Promise.resolve({ count: 0 });
+      }
+
       refreshSessionRecord = {
         ...refreshSessionRecord,
         ...data,
       };
 
-      return Promise.resolve(refreshSessionRecord);
+      return Promise.resolve({ count: 1 });
     });
 
     const loginData = await authService.login({
@@ -265,6 +332,92 @@ describe('AuthService', () => {
         data: null,
       },
       status: 401,
+    });
+  });
+
+  it('refresh token 使用 CAS 轮换，旧 token 第二次消费返回 TOKEN_REVOKED', async () => {
+    const activeUser = createUserRecord({
+      passwordHash,
+      userRoles: [
+        createUserRole({
+          role: createRole({
+            rolePermissions: [
+              createRolePermission({
+                permission: createPermission({
+                  code: 'menu:dashboard',
+                  name: '工作台菜单',
+                  type: 'MENU',
+                  module: 'dashboard',
+                }),
+              }),
+            ],
+          }),
+        }),
+      ],
+    });
+    let refreshSessionRecord: Record<string, unknown> | undefined;
+    let issuedRefreshTokenHash = '';
+
+    prisma.user.findUnique.mockResolvedValue(activeUser);
+    prisma.user.update.mockResolvedValue(activeUser);
+    prisma.refreshSession.create.mockImplementation(({ data }) => {
+      issuedRefreshTokenHash = data.refreshTokenHash;
+      refreshSessionRecord = {
+        id: 'session_cas',
+        ...data,
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 60_000),
+        user: activeUser,
+      };
+
+      return Promise.resolve(refreshSessionRecord);
+    });
+    prisma.refreshSession.findUnique.mockImplementation(() =>
+      Promise.resolve(refreshSessionRecord),
+    );
+    prisma.refreshSession.updateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
+
+    const loginData = await authService.login({
+      username: 'admin',
+      password: 'Correct#123',
+    });
+    const firstRefresh = await authService.refresh({
+      refreshToken: loginData.refreshToken,
+    });
+
+    expect(firstRefresh.refreshToken).toMatch(/^session_cas\./);
+    expect(firstRefresh.refreshToken).not.toBe(loginData.refreshToken);
+    expect(prisma.refreshSession.updateMany).toHaveBeenNthCalledWith(1, {
+      where: {
+        id: 'session_cas',
+        refreshTokenHash: issuedRefreshTokenHash,
+        revokedAt: null,
+      },
+      data: {
+        refreshTokenHash: expect.any(String),
+      },
+    });
+
+    await expect(
+      authService.refresh({ refreshToken: loginData.refreshToken }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'TOKEN_REVOKED',
+        data: null,
+      },
+      status: 401,
+    });
+    expect(prisma.refreshSession.updateMany).toHaveBeenNthCalledWith(2, {
+      where: {
+        id: 'session_cas',
+        refreshTokenHash: issuedRefreshTokenHash,
+        revokedAt: null,
+      },
+      data: {
+        refreshTokenHash: expect.any(String),
+      },
     });
   });
 
@@ -329,7 +482,36 @@ describe('AuthService', () => {
       status: 401,
     });
   });
+
+  it('logout 空 body 会撤销当前用户所有未撤销 refresh sessions', async () => {
+    prisma.refreshSession.updateMany.mockResolvedValue({ count: 2 });
+
+    await expect(authService.logout(createCurrentUser(), {})).resolves.toEqual({
+      success: true,
+    });
+
+    expect(prisma.refreshSession.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.refreshSession.updateMany).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-1',
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: expect.any(Date),
+      },
+    });
+  });
 });
+
+function createCurrentUser(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'user-1',
+    username: 'admin',
+    status: 'ACTIVE',
+    tokenVersion: 0,
+    ...overrides,
+  };
+}
 
 function createUserRecord(overrides: Record<string, unknown> = {}) {
   return {
