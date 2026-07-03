@@ -1,0 +1,4 @@
+interface:
+  display_name: "QSDMS Desktop Project"
+  short_description: "Project rules for QSDMS Flutter desktop work"
+  default_prompt: "Use $qsdms-desktop-project before changing QSDMS_DESKTOP Flutter desktop or backend code."
