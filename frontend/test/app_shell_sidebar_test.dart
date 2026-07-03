@@ -506,6 +506,63 @@ void main() {
     expect(noticeImageProvider.assetName, 'assets/images/SystemNotice.png');
   });
 
+  testWidgets('公告图片路径为空时隐藏公告区且不显示文字回退', (tester) async {
+    const notice = SidebarNoticeConfig(
+      title: '维护通知',
+      description: '今晚 22:00 进行桌面端维护',
+      url: 'https://example.com/maintenance',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: QsdmsSidebarDefaults.menuItems,
+            activeItemId: 'dashboard',
+            displayMode: SidebarDisplayMode.expanded,
+            user: QsdmsSidebarDefaults.user,
+            notice: notice,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('sidebar-notice-card')), findsNothing);
+    expect(find.byKey(const ValueKey('sidebar-notice-image')), findsNothing);
+    expect(find.text('维护通知'), findsNothing);
+    expect(find.text('今晚 22:00 进行桌面端维护'), findsNothing);
+  });
+
+  testWidgets('公告图片资源加载失败时隐藏公告区且不显示文字回退', (tester) async {
+    const notice = SidebarNoticeConfig(
+      title: '维护通知',
+      description: '今晚 22:00 进行桌面端维护',
+      url: 'https://example.com/maintenance',
+      imageAssetPath: 'assets/images/missing-system-notice.png',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: QsdmsSidebar(
+            items: QsdmsSidebarDefaults.menuItems,
+            activeItemId: 'dashboard',
+            displayMode: SidebarDisplayMode.expanded,
+            user: QsdmsSidebarDefaults.user,
+            notice: notice,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('sidebar-notice-card')), findsNothing);
+    expect(find.byKey(const ValueKey('sidebar-notice-image')), findsNothing);
+    expect(find.text('维护通知'), findsNothing);
+    expect(find.text('今晚 22:00 进行桌面端维护'), findsNothing);
+  });
+
   testWidgets('公告卡片展开状态撑满侧边栏可用宽度', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(

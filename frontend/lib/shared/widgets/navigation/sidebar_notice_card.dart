@@ -1,18 +1,56 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/theme/app_colors.dart';
 import 'sidebar_models.dart';
 
 /// 侧边栏底部通知公告卡片。
-class SidebarNoticeCard extends StatelessWidget {
+class SidebarNoticeCard extends StatefulWidget {
   const SidebarNoticeCard({required this.notice, this.onNoticeTap, super.key});
 
   final SidebarNoticeConfig notice;
   final ValueChanged<SidebarNoticeConfig>? onNoticeTap;
 
   @override
+  State<SidebarNoticeCard> createState() => _SidebarNoticeCardState();
+}
+
+class _SidebarNoticeCardState extends State<SidebarNoticeCard> {
+  bool _hasImageLoadError = false;
+
+  @override
+  void didUpdateWidget(SidebarNoticeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.notice.imageAssetPath != widget.notice.imageAssetPath) {
+      _hasImageLoadError = false;
+    }
+  }
+
+  void _hideAfterImageLoadError() {
+    if (_hasImageLoadError) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hasImageLoadError) {
+        return;
+      }
+
+      setState(() {
+        _hasImageLoadError = true;
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isInteractive = notice.canOpen && onNoticeTap != null;
+    final imageAssetPath = widget.notice.imageAssetPath?.trim();
+    if (imageAssetPath == null ||
+        imageAssetPath.isEmpty ||
+        _hasImageLoadError) {
+      return const SizedBox.shrink();
+    }
+
+    final isInteractive = widget.notice.canOpen && widget.onNoticeTap != null;
     const borderRadius = BorderRadius.all(Radius.circular(8));
 
     return Padding(
@@ -27,13 +65,14 @@ class SidebarNoticeCard extends StatelessWidget {
             mouseCursor: isInteractive
                 ? SystemMouseCursors.click
                 : SystemMouseCursors.basic,
-            onTap: isInteractive ? () => onNoticeTap!(notice) : null,
-            child: notice.imageAssetPath == null
-                ? _NoticeTextFallback(notice: notice)
-                : _NoticeImage(
-                    assetPath: notice.imageAssetPath!,
-                    semanticLabel: notice.title,
-                  ),
+            onTap: isInteractive
+                ? () => widget.onNoticeTap!(widget.notice)
+                : null,
+            child: _NoticeImage(
+              assetPath: imageAssetPath,
+              semanticLabel: widget.notice.title,
+              onLoadError: _hideAfterImageLoadError,
+            ),
           ),
         ),
       ),
@@ -42,10 +81,15 @@ class SidebarNoticeCard extends StatelessWidget {
 }
 
 class _NoticeImage extends StatelessWidget {
-  const _NoticeImage({required this.assetPath, required this.semanticLabel});
+  const _NoticeImage({
+    required this.assetPath,
+    required this.semanticLabel,
+    required this.onLoadError,
+  });
 
   final String assetPath;
   final String semanticLabel;
+  final VoidCallback onLoadError;
 
   @override
   Widget build(BuildContext context) {
@@ -57,61 +101,10 @@ class _NoticeImage extends StatelessWidget {
         fit: BoxFit.cover,
         semanticLabel: semanticLabel,
         errorBuilder: (context, error, stackTrace) {
-          return const _NoticeImagePlaceholder();
+          onLoadError();
+          return const SizedBox.shrink();
         },
       ),
-    );
-  }
-}
-
-class _NoticeImagePlaceholder extends StatelessWidget {
-  const _NoticeImagePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(color: AppColors.brandSubtle),
-      child: Center(
-        child: Icon(Icons.campaign_outlined, size: 24, color: AppColors.brand),
-      ),
-    );
-  }
-}
-
-class _NoticeTextFallback extends StatelessWidget {
-  const _NoticeTextFallback({required this.notice});
-
-  final SidebarNoticeConfig notice;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Icon(Icons.campaign_outlined, size: 22, color: AppColors.brand),
-        const SizedBox(height: 10),
-        Text(
-          notice.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.brandText,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          notice.description,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 12,
-            height: 1.35,
-          ),
-        ),
-      ],
     );
   }
 }
