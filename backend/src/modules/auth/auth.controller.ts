@@ -4,7 +4,10 @@ import type { Request } from 'express';
 
 import type { ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AuthService } from './auth.service';
-import { ApiPermission } from './decorators/api-permission.decorator';
+import {
+  ApiPermission,
+  AuthenticatedOnly,
+} from './decorators/api-permission.decorator';
 import type { AuthRequestContext } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
@@ -51,6 +54,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @AuthenticatedOnly()
   async logout(
     @CurrentUser() currentUser: CurrentUserPayload,
     @Body() dto: LogoutDto,
@@ -63,6 +67,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @AuthenticatedOnly()
   async me(
     @CurrentUser() currentUser: CurrentUserPayload,
   ): Promise<ApiResponse<AuthUser>> {
@@ -74,6 +79,7 @@ export class AuthController {
   }
 
   @Get('permissions')
+  @AuthenticatedOnly()
   async permissions(
     @CurrentUser() currentUser: CurrentUserPayload,
   ): Promise<ApiResponse<AuthPermission[]>> {

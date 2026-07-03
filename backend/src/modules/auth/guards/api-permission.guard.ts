@@ -9,7 +9,10 @@ import { PermissionType, UserStatus } from '@prisma/client';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { throwAuthException } from '../auth.errors';
-import { API_PERMISSION_KEY } from '../decorators/api-permission.decorator';
+import {
+  API_PERMISSION_KEY,
+  AUTHENTICATED_ONLY_KEY,
+} from '../decorators/api-permission.decorator';
 import { PUBLIC_ROUTE_KEY } from '../decorators/public.decorator';
 import { AuthenticatedRequest } from '../models/authenticated-request.model';
 
@@ -59,9 +62,20 @@ export class ApiPermissionGuard implements CanActivate {
     const requiredPermissionCodes = this.reflector.getAllAndOverride<
       readonly string[] | undefined
     >(API_PERMISSION_KEY, [context.getHandler(), context.getClass()]);
+    const isAuthenticatedOnlyRoute = this.reflector.getAllAndOverride<boolean>(
+      AUTHENTICATED_ONLY_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    const apiPermissionCodes = requiredPermissionCodes ?? [];
 
-    if (!requiredPermissionCodes || requiredPermissionCodes.length === 0) {
-      return true;
+    const hasApiPermissionMetadata = apiPermissionCodes.length > 0;
+
+    if (!hasApiPermissionMetadata && !isAuthenticatedOnlyRoute) {
+      throwAuthException(
+        'FORBIDDEN',
+        'API permission metadata is required.',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
@@ -73,6 +87,10 @@ export class ApiPermissionGuard implements CanActivate {
         'Authenticated user is required.',
         HttpStatus.UNAUTHORIZED,
       );
+    }
+
+    if (isAuthenticatedOnlyRoute && !hasApiPermissionMetadata) {
+      return true;
     }
 
     const user = await this.prisma.user.findUnique({
@@ -122,7 +140,7 @@ export class ApiPermissionGuard implements CanActivate {
       }
     }
 
-    const hasAllRequiredPermissions = requiredPermissionCodes.every(
+    const hasAllRequiredPermissions = apiPermissionCodes.every(
       (permissionCode) => grantedPermissionCodes.has(permissionCode),
     );
 

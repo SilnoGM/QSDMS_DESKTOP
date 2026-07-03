@@ -177,6 +177,99 @@ describe('UsersService', () => {
     );
   });
 
+  it('非 SUPER_ADMIN 不能分配 SUPER_ADMIN 角色', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce(createUserRecord())
+      .mockResolvedValueOnce(
+        createUserRecord({
+          id: 'actor-user',
+          username: 'actor',
+          userRoles: [
+            {
+              role: createRole({
+                id: 2,
+                code: 'ADMIN',
+                isSystem: false,
+              }),
+            },
+          ],
+        }),
+      );
+    prisma.role.findMany.mockResolvedValue([createRole()]);
+
+    await expect(
+      service.assignRoles('target-user', { roleIds: [1] }, createActor()),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'FORBIDDEN',
+        data: null,
+      },
+      status: 403,
+    });
+    expect(prisma.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'actor-user' } }),
+    );
+    expect(prisma.userRole.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('有效 SUPER_ADMIN 可以分配 SUPER_ADMIN 角色且审计 metadata 不写入操作者详情', async () => {
+    prisma.user.findUnique
+      .mockResolvedValueOnce(createUserRecord())
+      .mockResolvedValueOnce(
+        createEffectiveSuperAdmin({
+          id: 'actor-user',
+          username: 'actor',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createUserRecord({
+          userRoles: [
+            {
+              role: createRole(),
+            },
+          ],
+        }),
+      );
+    prisma.role.findMany.mockResolvedValue([createRole()]);
+    prisma.userRole.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.userRole.createMany.mockResolvedValue({ count: 1 });
+    prisma.auditLog.create.mockResolvedValue({});
+
+    await expect(
+      service.assignRoles('target-user', { roleIds: [1] }, createActor()),
+    ).resolves.toMatchObject({
+      id: 'target-user',
+      roles: [expect.objectContaining({ code: 'SUPER_ADMIN' })],
+    });
+
+    expect(prisma.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'actor-user' } }),
+    );
+    expect(prisma.userRole.createMany).toHaveBeenCalledWith({
+      data: [
+        {
+          userId: 'target-user',
+          roleId: 1,
+          assignedBy: 'actor-user',
+        },
+      ],
+      skipDuplicates: true,
+    });
+    expect(prisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        actorUserId: 'actor-user',
+        metadata: {
+          targetUsername: 'target',
+          roleIds: [1],
+          changedFields: ['roles'],
+        },
+      }),
+    });
+    expect(JSON.stringify(prisma.auditLog.create.mock.calls[0][0].data.metadata))
+      .not.toContain('actor');
+  });
+
   it('重置密码递增 tokenVersion 且响应不返回 hash', async () => {
     prisma.user.findUnique.mockResolvedValue(createUserRecord());
     prisma.user.update.mockResolvedValue(createUserRecord({ tokenVersion: 9 }));
@@ -268,7 +361,7 @@ function createUserRecord(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function createEffectiveSuperAdmin() {
+function createEffectiveSuperAdmin(overrides: Record<string, unknown> = {}) {
   return createUserRecord({
     userRoles: [
       {
@@ -279,6 +372,7 @@ function createEffectiveSuperAdmin() {
         }),
       },
     ],
+    ...overrides,
   });
 }
 

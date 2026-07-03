@@ -246,6 +246,7 @@ export class UsersService {
       const current = await this.findUserOrThrow(tx, id);
       const roles = await this.findActiveRolesOrThrow(tx, roleIds);
 
+      await this.assertCanGrantSuperAdminRole(tx, actor, roles);
       await this.assertCanReplaceRoles(tx, current, roleIds);
 
       await tx.userRole.deleteMany({
@@ -333,6 +334,35 @@ export class UsersService {
     return [...roles].sort(
       (left, right) => roleIds.indexOf(left.id) - roleIds.indexOf(right.id),
     );
+  }
+
+  private async assertCanGrantSuperAdminRole(
+    client: Prisma.TransactionClient,
+    actor: CurrentUserPayload,
+    roles: readonly Role[],
+  ): Promise<void> {
+    const grantsSuperAdminRole = roles.some(
+      (role) => role.code === SYSTEM_ROLE_CODES.SUPER_ADMIN,
+    );
+
+    if (!grantsSuperAdminRole) {
+      return;
+    }
+
+    const actorUser = await client.user.findUnique({
+      where: { id: actor.id },
+      include: USER_INCLUDE,
+    });
+
+    // 授予 SUPER_ADMIN 是二阶提权：即使调用者拥有 assign-roles API 权限，
+    // 也必须在当前事务内确认其仍是 ACTIVE 且绑定启用 SUPER_ADMIN 角色。
+    if (!actorUser || !this.isEffectiveSuperAdmin(actorUser)) {
+      throwAuthException(
+        'FORBIDDEN',
+        'Only effective SUPER_ADMIN can assign SUPER_ADMIN role.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
   }
 
   private async assertCanDisableOrLockUser(
